@@ -166,6 +166,14 @@ function estadoEmpresa(e) {
   return { clave: 'activa', texto: 'Activo' };
 }
 
+function textoEspacio(e) {
+  const gb = Number(e.almacenamientoGb || 0);
+  const b = e.usoBytes;
+  const usado = b == null ? '' : b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : `${Math.round(b / 1024 ** 2)} MB`;
+  if (!gb) return usado ? `${usado} · ilimitado` : 'Ilimitado';
+  return usado ? `${usado} de ${gb} GB` : `${gb} GB`;
+}
+
 function tarjetaEmpresa(e) {
   const est = estadoEmpresa(e);
   const vence = e.licencia?.vence;
@@ -182,6 +190,7 @@ function tarjetaEmpresa(e) {
         <li><b>Usuario</b>${esc(e.adminUsuario || 'admin')}</li>
         <li><b>Vence</b>${vence ? fechaDia(vence) : '—'}</li>
         <li><b>Quedan</b>${Number.isFinite(dias) && est.clave !== 'pendiente' ? (dias < 0 ? '0 días' : `${dias} día${dias === 1 ? '' : 's'}`) : '—'}</li>
+        ${est.clave !== 'pendiente' ? `<li><b>Almacenamiento</b>${esc(textoEspacio(e))}</li>` : ''}
       </ul>
       ${e.tieneClave && est.clave !== 'pendiente' ? `
         <div class="clave-empresa" data-empresa="${esc(e.id)}">

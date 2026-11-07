@@ -199,6 +199,8 @@ router.get('/cuenta/empresas', requiereSesion, a(async (req, res) => {
     adminUsuario: e.adminUsuario,
     tieneClave: !!e.adminClave && cifrado.disponible(),
     claveVista: e.claveVista,
+    almacenamientoGb: e.almacenamientoGb || 0, // 0 = ilimitado
+    usoBytes: e.usoBytes ?? null,
     licencia: e.licenciaServidor && e.licenciaServidor.estado ? e.licenciaServidor : { estado: e.estado === 'lista' ? 'activa' : '', vence: e.vence }
   })));
 }));
