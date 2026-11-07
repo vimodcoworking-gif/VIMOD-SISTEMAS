@@ -36,6 +36,34 @@ router.post('/auth/login', auth.limitador(10, 15 * 60e3), a(async (req, res) => 
   res.json({ ok: true });
 }));
 
+// Registro de nuevos clientes desde la página.
+router.post('/auth/registro', auth.limitador(5, 60 * 60e3), a(async (req, res) => {
+  const nombre = String(req.body.nombre || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  if (!nombre || !email) return res.status(400).json({ error: 'Ingresa tu nombre y correo' });
+  if (!/.+@.+\..+/.test(email)) return res.status(400).json({ error: 'El correo no es válido' });
+  if (password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  if (await Usuario.exists({ email })) {
+    return res.status(409).json({ error: 'Ya existe una cuenta con ese correo. Inicia sesión.' });
+  }
+  try {
+    const u = await Usuario.create({
+      nombre,
+      email,
+      empresa: req.body.empresa,
+      telefono: req.body.telefono,
+      passwordHash: auth.hashPassword(password),
+      ultimoAcceso: new Date()
+    });
+    auth.iniciarSesion(req, res, COOKIE, { sub: u.id }, HORAS);
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo. Inicia sesión.' });
+    throw err;
+  }
+}));
+
 router.post('/auth/logout', (req, res) => {
   auth.cerrarSesion(req, res, COOKIE);
   res.json({ ok: true });

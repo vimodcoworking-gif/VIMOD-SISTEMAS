@@ -32,8 +32,13 @@
   <main class="acceso">
     <div class="acceso__caja">
       <span class="etiqueta">Área de clientes</span>
-      <h1 class="titulo">Accede a tu <strong>cuenta</strong></h1>
+      <h1 class="titulo" id="tituloAcceso">Accede a tu <strong>cuenta</strong></h1>
       <p class="texto">Consulta tus sistemas, licencias y solicitudes en un solo lugar.</p>
+
+      <div class="acceso__pestanas" role="tablist">
+        <button type="button" role="tab" data-modo="ingresar" class="activo" aria-selected="true">Ingresar</button>
+        <button type="button" role="tab" data-modo="registro" aria-selected="false">Crear cuenta</button>
+      </div>
 
       <form class="form" id="formAcceso" novalidate>
         <div class="campo"><label for="a-email">Correo</label><input id="a-email" name="email" type="email" autocomplete="username" required></div>
@@ -48,8 +53,19 @@
         <p class="form__estado" id="estadoAcceso" role="status"></p>
       </form>
 
-      <p class="acceso__ayuda">¿Aún no tienes cuenta? Tu cuenta se crea al adquirir un plan.
-        <a href="planes.html">Ver planes</a> · <a href="index.html#contacto">Contáctanos</a></p>
+      <form class="form" id="formRegistro" novalidate hidden>
+        <div class="campo"><label for="r-nombre">Nombre completo</label><input id="r-nombre" name="nombre" autocomplete="name" required maxlength="120"></div>
+        <div class="campo"><label for="r-email">Correo</label><input id="r-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="campo"><label for="r-empresa">Empresa (opcional)</label><input id="r-empresa" name="empresa" autocomplete="organization" maxlength="160"></div>
+        <div class="campo"><label for="r-tel">Teléfono (opcional)</label><input id="r-tel" name="telefono" type="tel" autocomplete="tel" maxlength="40"></div>
+        <div class="campo"><label for="r-password">Contraseña (mínimo 8 caracteres)</label><input id="r-password" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div class="campo"><label for="r-repetir">Repetir contraseña</label><input id="r-repetir" name="repetir" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div><button class="btn" type="submit">Crear cuenta <span class="flecha">→</span></button></div>
+        <p class="form__estado" id="estadoRegistro" role="status"></p>
+      </form>
+
+      <p class="acceso__ayuda" id="ayudaIngresar">¿Aún no tienes cuenta? <a href="#registro" data-ir="registro">Créala gratis</a> · <a href="planes.html">Ver planes</a></p>
+      <p class="acceso__ayuda" id="ayudaRegistro" hidden>¿Ya tienes cuenta? <a href="#ingresar" data-ir="ingresar">Inicia sesión</a></p>
     </div>
   </main>
 

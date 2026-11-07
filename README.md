@@ -88,6 +88,7 @@ que debe usar **la misma** `MONGODB_URI`. Variables adicionales:
 
 | Método | Ruta                    | Descripción                              |
 |--------|-------------------------|------------------------------------------|
+| POST   | /api/auth/registro      | `{ nombre, email, empresa, telefono, password }` (crea la cuenta) |
 | POST   | /api/auth/login         | `{ email, password }`                    |
 | POST   | /api/auth/logout        | Cierra la sesión                         |
 | GET    | /api/cuenta             | Datos del cliente                        |
