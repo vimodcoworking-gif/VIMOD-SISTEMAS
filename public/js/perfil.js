@@ -12,6 +12,8 @@ const ESTADOS = {
 };
 const insignia = (estado) => `<span class="insignia insignia--${esc(estado)}">${esc(ESTADOS[estado] || estado)}</span>`;
 const urlSegura = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
+const precioLicencia = (l) =>
+  l.precio == null ? '—' : `$${Number(l.precio).toLocaleString('es', { maximumFractionDigits: 2 })}${l.periodo ? ' / ' + esc(l.periodo) : ''}`;
 
 async function api(url, opciones = {}) {
   const res = await fetch('/api' + url, {
@@ -90,6 +92,7 @@ function tarjetaSistema(l) {
         <li><b>Plan</b>${esc(l.planNombre)}</li>
         <li><b>Vence</b>${l.fechaVencimiento ? fechaDia(l.fechaVencimiento) : 'Sin vencimiento'}</li>
         <li><b>Usuarios</b>${l.maxUsuarios || 'Ilimitados'}</li>
+        ${l.precio != null ? `<li><b>Precio</b>${precioLicencia(l)}</li>` : ''}
       </ul>
       ${accion}
     </article>`;
@@ -134,13 +137,14 @@ function pintarLicencias(licencias) {
         <tr>
           <td data-col="Sistema">${esc(l.sistema.nombre)}</td>
           <td data-col="Plan">${esc(l.planNombre)}</td>
+          <td data-col="Precio">${precioLicencia(l)}</td>
           <td data-col="Clave"><code class="clave">${esc(l.clave)}</code> <button class="copiar" type="button" data-copiar="${esc(l.clave)}">Copiar</button></td>
           <td data-col="Inicio">${fechaDia(l.fechaInicio)}</td>
           <td data-col="Vence">${l.fechaVencimiento ? fechaDia(l.fechaVencimiento) : 'Sin vencimiento'}</td>
           <td data-col="Usuarios">${l.maxUsuarios || 'Ilimitados'}</td>
           <td data-col="Estado">${insignia(l.estado)}</td>
         </tr>`).join('')
-    : '<tr><td colspan="7" class="tabla__vacia">No tienes licencias registradas.</td></tr>';
+    : '<tr><td colspan="8" class="tabla__vacia">No tienes licencias registradas.</td></tr>';
 }
 
 function pintarSolicitudes(lista) {

@@ -168,7 +168,9 @@ router.get('/cuenta/licencias', requiereSesion, a(async (req, res) => {
       estado: l.estadoReal,
       fechaInicio: l.fechaInicio,
       fechaVencimiento: l.fechaVencimiento,
-      maxUsuarios: l.maxUsuarios
+      maxUsuarios: l.maxUsuarios,
+      precio: l.precio,
+      periodo: l.periodo
     }))
   );
 }));
