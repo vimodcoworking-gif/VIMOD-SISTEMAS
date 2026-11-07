@@ -5,6 +5,8 @@ const Usuario = require('../models/Usuario');
 const Licencia = require('../models/Licencia');
 const Sistema = require('../models/Sistema');
 const Solicitud = require('../models/Solicitud');
+const Empresa = require('../models/Empresa');
+const cifrado = require('../lib/cifrado');
 const auth = require('../lib/auth');
 
 const router = express.Router();
@@ -184,6 +186,31 @@ router.get('/cuenta/solicitudes', requiereSesion, a(async (req, res) => {
     estado: s.estado || 'pendiente',
     fecha: s.createdAt
   })));
+}));
+
+// ---- Sistema propio de la empresa (VIMOD CONTROL en el servidor) ----
+router.get('/cuenta/empresas', requiereSesion, a(async (req, res) => {
+  const lista = await Empresa.find({ usuario: req.usuario._id }).select('+adminClave').sort('-createdAt').lean();
+  res.json(lista.map((e) => ({
+    id: String(e._id),
+    nombre: e.nombre,
+    estado: e.estado, // pendiente | lista | error
+    url: e.estado === 'lista' && /^https?:\/\//i.test(e.url || '') ? e.url : '',
+    adminUsuario: e.adminUsuario,
+    tieneClave: !!e.adminClave && cifrado.disponible(),
+    claveVista: e.claveVista,
+    licencia: e.licenciaServidor && e.licenciaServidor.estado ? e.licenciaServidor : { estado: e.estado === 'lista' ? 'activa' : '', vence: e.vence }
+  })));
+}));
+
+router.get('/cuenta/empresas/:id/clave', requiereSesion, a(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'No encontrado' });
+  const e = await Empresa.findOne({ _id: req.params.id, usuario: req.usuario._id }).select('+adminClave');
+  if (!e || !e.adminClave) return res.status(404).json({ error: 'La contraseña ya no está disponible. Pídela a VIMOD.' });
+  const clave = cifrado.descifrar(e.adminClave);
+  if (!clave) return res.status(503).json({ error: 'No se pudo mostrar la contraseña. Pídela a VIMOD.' });
+  if (!e.claveVista) await Empresa.updateOne({ _id: e._id }, { claveVista: new Date() });
+  res.json({ usuario: e.adminUsuario, clave, url: e.url });
 }));
 
 // Errores de validación → 400; el resto → 500.

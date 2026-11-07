@@ -158,13 +158,77 @@ function pintarSolicitudes(lista) {
     : '<tr><td colspan="3" class="tabla__vacia">No has enviado solicitudes.</td></tr>';
 }
 
+// ---- Sistema propio de la empresa (VIMOD CONTROL) ----
+function estadoEmpresa(e) {
+  if (e.estado !== 'lista') return { clave: 'pendiente', texto: 'En preparación' };
+  if (e.licencia?.estado === 'suspendida') return { clave: 'suspendida', texto: 'Suspendido' };
+  if (e.licencia?.vigente === false) return { clave: 'vencida', texto: 'Vencido' };
+  return { clave: 'activa', texto: 'Activo' };
+}
+
+function tarjetaEmpresa(e) {
+  const est = estadoEmpresa(e);
+  const vence = e.licencia?.vence;
+  const dias = Number(e.licencia?.dias);
+  const url = urlSegura(e.url);
+  let accion;
+  if (est.clave === 'pendiente') accion = '<p class="texto texto--chico">Estamos preparando tu sistema. Estará listo en unos minutos.</p>';
+  else if (est.clave === 'activa' && url) accion = `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Abrir mi sistema <span class="flecha">→</span></a>`;
+  else accion = '<a class="btn btn--borde" href="index.html#contacto">Renovar <span class="flecha">→</span></a>';
+  return `
+    <article class="sistema sistema--empresa">
+      <div class="sistema__cabecera"><h3>${esc(e.nombre)}</h3><span class="insignia insignia--${est.clave}">${est.texto}</span></div>
+      <ul class="sistema__datos">
+        <li><b>Usuario</b>${esc(e.adminUsuario || 'admin')}</li>
+        <li><b>Vence</b>${vence ? fechaDia(vence) : '—'}</li>
+        <li><b>Quedan</b>${Number.isFinite(dias) && est.clave !== 'pendiente' ? (dias < 0 ? '0 días' : `${dias} día${dias === 1 ? '' : 's'}`) : '—'}</li>
+      </ul>
+      ${e.tieneClave && est.clave !== 'pendiente' ? `
+        <div class="clave-empresa" data-empresa="${esc(e.id)}">
+          <button class="btn btn--borde btn--chico" type="button" data-ver-clave="${esc(e.id)}">Ver contraseña inicial</button>
+        </div>` : ''}
+      ${accion}
+    </article>`;
+}
+
+function pintarEmpresas(empresas) {
+  $('bloqueEmpresas').hidden = !empresas.length;
+  if (!empresas.length) return;
+  const html = empresas.map(tarjetaEmpresa).join('');
+  $('listaEmpresas').innerHTML = html;
+  // En el resumen, el sistema de la empresa va primero en "Acceso rápido".
+  const rapido = $('accesoRapido');
+  if (rapido.querySelector('.vacio')) rapido.innerHTML = '';
+  rapido.insertAdjacentHTML('afterbegin', html);
+  const activos = empresas.filter((e) => estadoEmpresa(e).clave === 'activa').length;
+  $('tSistemas').textContent = Number($('tSistemas').textContent || 0) + activos;
+}
+
+async function verClaveEmpresa(boton) {
+  const caja = boton.closest('.clave-empresa');
+  boton.disabled = true;
+  try {
+    const r = await api(`/cuenta/empresas/${boton.dataset.verClave}/clave`);
+    caja.innerHTML = `
+      <div class="credenciales-cliente">
+        <span>Contraseña inicial</span>
+        <code>${esc(r.clave)}</code>
+        <button class="copiar" type="button" data-copiar="${esc(r.clave)}">Copiar</button>
+      </div>
+      <p class="texto texto--chico">Por seguridad, cámbiala al entrar: Configuración → contraseña.</p>`;
+  } catch (err) {
+    caja.innerHTML = `<p class="texto texto--chico">${esc(err.message)}</p>`;
+  }
+}
+
 async function cargar() {
   try {
-    const [usuario, licencias, solicitudes] = await Promise.all([
-      api('/cuenta'), api('/cuenta/licencias'), api('/cuenta/solicitudes')
+    const [usuario, licencias, solicitudes, empresas] = await Promise.all([
+      api('/cuenta'), api('/cuenta/licencias'), api('/cuenta/solicitudes'), api('/cuenta/empresas').catch(() => [])
     ]);
     pintarPerfil(usuario);
     pintarLicencias(licencias);
+    pintarEmpresas(empresas);
     pintarSolicitudes(solicitudes);
   } catch (err) {
     $('avisos').innerHTML = `<div class="aviso-caja"><p>${esc(err.message)}</p></div>`;
@@ -175,6 +239,8 @@ async function cargar() {
 
 // ---- Acciones ----
 document.addEventListener('click', async (e) => {
+  const ver = e.target.closest('[data-ver-clave]');
+  if (ver) return verClaveEmpresa(ver);
   const boton = e.target.closest('[data-copiar]');
   if (!boton) return;
   try {

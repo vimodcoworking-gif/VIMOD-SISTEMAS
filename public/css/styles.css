@@ -230,6 +230,14 @@ a { color: inherit; text-decoration: none; }
   html { scroll-behavior: auto; }
 }
 
+/* ===== Sistema de la empresa en "Mi cuenta" ===== */
+.sistema--empresa { border-color: var(--gris); }
+.clave-empresa { display: grid; gap: 8px; justify-items: start; }
+.credenciales-cliente { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid var(--gris-oscuro); background: var(--negro); padding: 10px 14px; width: 100%; }
+.credenciales-cliente span { font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gris); }
+.credenciales-cliente code { font-family: ui-monospace, Consolas, monospace; font-size: .95rem; letter-spacing: .04em; }
+.insignia--pendiente { border-style: dotted; }
+
 /* ===== Contenido editable ===== */
 .cargando-sitio [data-editable] { visibility: hidden; }
 .software + .software { margin-top: 110px; }
