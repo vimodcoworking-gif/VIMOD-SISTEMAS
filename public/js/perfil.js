@@ -49,7 +49,16 @@ function pintarPerfil(u) {
   f.email.value = u.email;
   f.empresa.value = u.empresa;
   f.telefono.value = u.telefono;
-  $('infoCuenta').textContent = `Cliente desde ${fecha(u.creado)} · Último acceso ${fecha(u.ultimoAcceso)}`;
+  $('infoCuenta').textContent = `Cliente desde ${fecha(u.creado)} · Último acceso ${fecha(u.ultimoAcceso)}` +
+    (u.google ? ' · Vinculada con Google' : '');
+  // Cuenta sin contraseña (creada con Google): se crea una sin pedir la actual.
+  if (u.tienePassword !== undefined) {
+    const sinClave = !u.tienePassword;
+    $('campoActual').hidden = sinClave;
+    $('formClave').actual.required = !sinClave;
+    $('notaClave').hidden = !sinClave;
+    $('tituloClave').textContent = sinClave ? 'Crear contraseña' : 'Cambiar contraseña';
+  }
 }
 
 // Un sistema puede tener varias licencias: se muestra la más vigente.
@@ -194,8 +203,10 @@ $('formClave').addEventListener('submit', async (e) => {
   estado.textContent = 'Actualizando…';
   try {
     await api('/cuenta/password', { method: 'PUT', body: { actual: f.actual.value, nueva: f.nueva.value } });
+    const eraNueva = $('campoActual').hidden;
     f.reset();
-    estado.textContent = 'Contraseña actualizada.';
+    if (eraNueva) pintarPerfil(await api('/cuenta'));
+    estado.textContent = eraNueva ? 'Contraseña creada. Ya puedes entrar también con tu correo.' : 'Contraseña actualizada.';
   } catch (err) {
     estado.textContent = 'Error: ' + err.message;
   }

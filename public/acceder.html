@@ -40,6 +40,12 @@
         <button type="button" role="tab" data-modo="registro" aria-selected="false">Crear cuenta</button>
       </div>
 
+      <div class="acceso__google" id="bloqueGoogle" hidden>
+        <div id="botonGoogle" class="acceso__google-boton"></div>
+        <p class="form__estado" id="estadoGoogle" role="status"></p>
+        <div class="separador"><span>o con tu correo</span></div>
+      </div>
+
       <form class="form" id="formAcceso" novalidate>
         <div class="campo"><label for="a-email">Correo</label><input id="a-email" name="email" type="email" autocomplete="username" required></div>
         <div class="campo">

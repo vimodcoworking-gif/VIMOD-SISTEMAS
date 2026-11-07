@@ -36,6 +36,44 @@ router.post('/auth/login', auth.limitador(10, 15 * 60e3), a(async (req, res) => 
   res.json({ ok: true });
 }));
 
+// ---- Inicio de sesión con Google ----
+// El navegador recibe de Google un "ID token" (JWT firmado) y lo envía aquí;
+// se valida con el servicio tokeninfo de Google.
+async function verificarTokenGoogle(credential) {
+  const res = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential));
+  if (!res.ok) return null;
+  const t = await res.json();
+  const emisorOk = t.iss === 'accounts.google.com' || t.iss === 'https://accounts.google.com';
+  const vigente = Number(t.exp) * 1000 > Date.now();
+  if (t.aud !== process.env.GOOGLE_CLIENT_ID || !emisorOk || !vigente) return null;
+  if (t.email_verified !== true && t.email_verified !== 'true') return null;
+  return t;
+}
+
+router.post('/auth/google', auth.limitador(20, 15 * 60e3), a(async (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID) return res.status(503).json({ error: 'El inicio con Google no está configurado' });
+  const credential = String(req.body.credential || '');
+  if (!credential) return res.status(400).json({ error: 'Falta la credencial de Google' });
+
+  const t = await verificarTokenGoogle(credential);
+  if (!t) return res.status(401).json({ error: 'No se pudo verificar tu cuenta de Google. Inténtalo de nuevo.' });
+
+  const email = String(t.email).toLowerCase();
+  let u = await Usuario.findOne({ $or: [{ googleId: t.sub }, { email }] });
+  let nuevo = false;
+  if (u) {
+    if (!u.activo) return res.status(403).json({ error: 'Tu cuenta está desactivada. Contáctanos para reactivarla.' });
+    if (!u.googleId) u.googleId = t.sub; // vincula Google a una cuenta existente con el mismo correo
+  } else {
+    u = new Usuario({ nombre: t.name || email.split('@')[0], email, googleId: t.sub });
+    nuevo = true;
+  }
+  u.ultimoAcceso = new Date();
+  await u.save();
+  auth.iniciarSesion(req, res, COOKIE, { sub: u.id }, HORAS);
+  res.status(nuevo ? 201 : 200).json({ ok: true, nuevo });
+}));
+
 // Registro de nuevos clientes desde la página.
 router.post('/auth/registro', auth.limitador(5, 60 * 60e3), a(async (req, res) => {
   const nombre = String(req.body.nombre || '').trim();
@@ -82,6 +120,7 @@ const requiereSesion = a(async (req, res, next) => {
 
 // ---- Mi cuenta ----
 const perfil = (u) => ({
+  google: !!u.googleId,
   nombre: u.nombre,
   email: u.email,
   empresa: u.empresa || '',
@@ -90,7 +129,10 @@ const perfil = (u) => ({
   ultimoAcceso: u.ultimoAcceso
 });
 
-router.get('/cuenta', requiereSesion, (req, res) => res.json(perfil(req.usuario)));
+router.get('/cuenta', requiereSesion, a(async (req, res) => {
+  const conClave = await Usuario.exists({ _id: req.usuario._id, passwordHash: { $exists: true, $ne: null } });
+  res.json({ ...perfil(req.usuario), tienePassword: !!conClave });
+}));
 
 router.put('/cuenta', requiereSesion, a(async (req, res) => {
   const { nombre, empresa, telefono } = req.body;
@@ -104,7 +146,10 @@ router.put('/cuenta/password', requiereSesion, a(async (req, res) => {
   const nueva = String(req.body.nueva || '');
   if (nueva.length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
   const u = await Usuario.findById(req.usuario._id).select('+passwordHash');
-  if (!auth.verificarPassword(actual, u.passwordHash)) return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+  // Las cuentas creadas con Google no tienen contraseña: pueden crear una sin indicar la actual.
+  if (u.passwordHash && !auth.verificarPassword(actual, u.passwordHash)) {
+    return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+  }
   u.passwordHash = auth.hashPassword(nueva);
   await u.save();
   res.json({ ok: true });

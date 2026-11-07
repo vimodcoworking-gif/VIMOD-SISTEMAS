@@ -85,6 +85,16 @@ que debe usar **la misma** `MONGODB_URI`. Variables adicionales:
 | Variable         | Descripción                                             |
 |------------------|---------------------------------------------------------|
 | `SESSION_SECRET` | Texto largo y aleatorio para firmar las sesiones        |
+| `GOOGLE_CLIENT_ID` | (Opcional) Activa “Continuar con Google” en Acceder   |
+
+### Inicio de sesión con Google
+
+1. En https://console.cloud.google.com crea un proyecto → **APIs y servicios → Pantalla de consentimiento de OAuth** (tipo Externo, publícala).
+2. **Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación web**.
+3. En **Orígenes autorizados de JavaScript** agrega `https://vimod-sistemas.onrender.com` (y `http://localhost:3000` para pruebas).
+4. Copia el **ID de cliente** en la variable `GOOGLE_CLIENT_ID` de Render.
+
+Si el correo de Google ya tiene cuenta, se vincula a ella; si no, se crea una nueva.
 
 | Método | Ruta                    | Descripción                              |
 |--------|-------------------------|------------------------------------------|

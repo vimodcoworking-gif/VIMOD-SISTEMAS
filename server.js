@@ -61,6 +61,11 @@ app.post('/api/solicitudes', async (req, res) => {
   }
 });
 
+// Configuración pública para el navegador (el Client ID de Google no es secreto)
+app.get('/api/config', (req, res) => {
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || null });
+});
+
 // Área de clientes: login y "Mi cuenta"
 app.use('/api', require('./routes/cuenta'));
 
