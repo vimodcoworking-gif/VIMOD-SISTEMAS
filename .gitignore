@@ -5,3 +5,4 @@ npm-debug.log*
 Thumbs.db
 *.env
 /*.mp4
+client_secret*.json
