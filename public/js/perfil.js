@@ -148,7 +148,7 @@ function pintarSolicitudes(lista) {
     ? lista.map((s) => `
         <tr>
           <td data-col="Fecha">${fecha(s.fecha)}</td>
-          <td data-col="Plan">${esc(s.plan)}</td>
+          <td data-col="Plan">${s.software ? esc(s.software) + " · " : ""}${esc(s.plan)}</td>
           <td data-col="Estado">${insignia(s.estado)}</td>
         </tr>`).join('')
     : '<tr><td colspan="3" class="tabla__vacia">No has enviado solicitudes.</td></tr>';

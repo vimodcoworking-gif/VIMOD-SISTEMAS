@@ -30,14 +30,15 @@
 
   <header class="cabecera-planes">
     <div class="contenedor">
-      <span class="etiqueta">VIMOD Gestión</span>
+      <span class="etiqueta" id="planesSoftware">VIMOD Gestión</span>
       <h1 class="titulo">Nuestros <strong>planes</strong></h1>
-      <p class="texto">Elige el plan que mejor se adapta a tu empresa. Todos incluyen acceso en la nube, actualizaciones y respaldo de tu información.</p>
+      <p class="texto" id="planesTexto"></p>
+      <nav class="selector-software" id="selectorSoftware" aria-label="Softwares" hidden></nav>
     </div>
   </header>
 
   <main class="contenedor">
-    <div class="planes" id="planes"><!-- Se llena desde /api/planes --></div>
+    <div class="planes" id="planes"><!-- Se llena desde /api/sitio --></div>
   </main>
 
   <!-- Modal de solicitud -->
@@ -46,7 +47,9 @@
       <button class="modal__cerrar" id="modalCerrar" aria-label="Cerrar">×</button>
       <span class="etiqueta">Solicitud</span>
       <h2 class="titulo" id="modalTitulo" style="font-size:2rem">Plan <strong></strong></h2>
+      <p class="texto" id="modalSoftware" style="margin:-14px 0 18px;font-size:.85rem"></p>
       <form class="form" id="formSolicitud">
+        <input type="hidden" name="sistema">
         <input type="hidden" name="plan">
         <div class="campo"><label for="s-nombre">Nombre</label><input id="s-nombre" name="nombre" required maxlength="120"></div>
         <div class="campo"><label for="s-empresa">Empresa</label><input id="s-empresa" name="empresa" maxlength="160"></div>

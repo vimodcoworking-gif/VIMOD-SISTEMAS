@@ -5,7 +5,6 @@ const Usuario = require('../models/Usuario');
 const Licencia = require('../models/Licencia');
 const Sistema = require('../models/Sistema');
 const Solicitud = require('../models/Solicitud');
-const planes = require('../data/planes');
 const auth = require('../lib/auth');
 
 const router = express.Router();
@@ -14,7 +13,7 @@ const HORAS = 24 * 7;
 const HASH_FALSO = auth.hashPassword('sin-usuario'); // para que el tiempo de respuesta no delate si el correo existe
 
 const a = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const nombrePlan = (id) => (planes.find((p) => p.id === id) || {}).nombre || id;
+const nombrePlan = (sistema, codigo) => Sistema.nombrePlan(sistema, codigo);
 
 router.use((req, res, next) =>
   mongoose.connection.readyState === 1 ? next() : res.status(503).json({ error: 'Base de datos no disponible' })
@@ -164,7 +163,7 @@ router.get('/cuenta/licencias', requiereSesion, a(async (req, res) => {
         ? { id: l.sistema.id, nombre: l.sistema.nombre, descripcion: l.sistema.descripcion || '', url: l.sistema.url || '' }
         : { id: null, nombre: 'Sistema no disponible', descripcion: '', url: '' },
       plan: l.plan,
-      planNombre: nombrePlan(l.plan),
+      planNombre: nombrePlan(l.sistema, l.plan),
       clave: l.clave,
       estado: l.estadoReal,
       fechaInicio: l.fechaInicio,
@@ -175,8 +174,14 @@ router.get('/cuenta/licencias', requiereSesion, a(async (req, res) => {
 }));
 
 router.get('/cuenta/solicitudes', requiereSesion, a(async (req, res) => {
-  const lista = await Solicitud.find({ email: req.usuario.email }).sort('-createdAt').limit(50);
-  res.json(lista.map((s) => ({ id: s.id, plan: nombrePlan(s.plan), estado: s.estado || 'pendiente', fecha: s.createdAt })));
+  const lista = await Solicitud.find({ email: req.usuario.email }).populate('sistema', 'nombre planes').sort('-createdAt').limit(50);
+  res.json(lista.map((s) => ({
+    id: s.id,
+    software: s.sistema ? s.sistema.nombre : '',
+    plan: nombrePlan(s.sistema, s.plan),
+    estado: s.estado || 'pendiente',
+    fecha: s.createdAt
+  })));
 }));
 
 // Errores de validación → 400; el resto → 500.
