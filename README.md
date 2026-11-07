@@ -73,3 +73,25 @@ git push -u origin main
 | POST   | /api/solicitudes  | `{ plan, nombre, empresa, email, telefono }` |
 
 Los registros se guardan en las colecciones `contactos` y `solicituds` de MongoDB.
+
+## Área de clientes (Acceder → Mi cuenta)
+
+El menú tiene **Acceder**: el cliente inicia sesión en `acceder.html` y ve en `perfil.html` sus sistemas,
+licencias (con clave y vencimiento), solicitudes y sus datos (puede editarlos y cambiar su contraseña).
+
+Las cuentas, licencias y sistemas se crean desde el **Panel administrador** (repositorio aparte),
+que debe usar **la misma** `MONGODB_URI`. Variables adicionales:
+
+| Variable         | Descripción                                             |
+|------------------|---------------------------------------------------------|
+| `SESSION_SECRET` | Texto largo y aleatorio para firmar las sesiones        |
+
+| Método | Ruta                    | Descripción                              |
+|--------|-------------------------|------------------------------------------|
+| POST   | /api/auth/login         | `{ email, password }`                    |
+| POST   | /api/auth/logout        | Cierra la sesión                         |
+| GET    | /api/cuenta             | Datos del cliente                        |
+| PUT    | /api/cuenta             | `{ nombre, empresa, telefono }`          |
+| PUT    | /api/cuenta/password    | `{ actual, nueva }`                      |
+| GET    | /api/cuenta/licencias   | Licencias y sistemas del cliente         |
+| GET    | /api/cuenta/solicitudes | Solicitudes enviadas con su correo       |

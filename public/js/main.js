@@ -15,6 +15,13 @@ links.querySelectorAll('a').forEach((a) =>
   a.addEventListener('click', () => nav.classList.remove('menu-abierto'))
 );
 
+// ---- Enlace "Acceder" → "Mi cuenta" si hay sesión iniciada ----
+const enlaceAcceso = document.querySelector('[data-acceso]');
+if (enlaceAcceso && /(?:^|;\s*)vimod_sesion_on=1/.test(document.cookie)) {
+  enlaceAcceso.textContent = 'Mi cuenta';
+  enlaceAcceso.href = 'perfil.html';
+}
+
 // ---- Revelar elementos al deslizar ----
 const observador = new IntersectionObserver(
   (entradas) => {

@@ -11,6 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
+app.set('trust proxy', 1); // Render está detrás de un proxy HTTPS
 app.use(express.json({ limit: '20kb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
@@ -59,6 +60,11 @@ app.post('/api/solicitudes', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+// Área de clientes: login y "Mi cuenta"
+app.use('/api', require('./routes/cuenta'));
+
+app.use('/api', (req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));

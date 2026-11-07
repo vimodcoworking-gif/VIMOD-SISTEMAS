@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi cuenta | VIMOD</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="img/vimod-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="nav solida" id="nav">
+    <div class="contenedor">
+      <a href="index.html" class="nav__logo"><img src="img/vimod-logo.png" alt="VIMOD Arquitectura y Diseño"></a>
+      <button class="nav__toggle" id="navToggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="index.html#inicio">Inicio</a></li>
+        <li><a href="index.html#nosotros">Nosotros</a></li>
+        <li><a href="index.html#proyectos">Nuestros proyectos</a></li>
+        <li><a href="index.html#softwares">Nuestros softwares</a></li>
+        <li><a href="index.html#contacto">Contacto</a></li>
+        <li><a href="perfil.html" class="nav__acceder activo" data-acceso>Mi cuenta</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="cuenta contenedor" id="cuenta" aria-busy="true">
+    <aside class="cuenta__lateral">
+      <div class="cuenta__usuario">
+        <div class="avatar" id="avatar" aria-hidden="true"></div>
+        <div>
+          <b id="uNombre">Cargando…</b>
+          <span id="uEmail"></span>
+        </div>
+      </div>
+      <nav class="cuenta__menu" aria-label="Secciones de mi cuenta">
+        <a href="#resumen" data-tab="resumen">Resumen</a>
+        <a href="#sistemas" data-tab="sistemas">Mis sistemas</a>
+        <a href="#licencias" data-tab="licencias">Mis licencias</a>
+        <a href="#solicitudes" data-tab="solicitudes">Mis solicitudes</a>
+        <a href="#perfil" data-tab="perfil">Mi perfil</a>
+      </nav>
+      <button class="btn btn--borde btn--chico" id="salir" type="button">Cerrar sesión</button>
+    </aside>
+
+    <section class="cuenta__panel">
+
+      <!-- Resumen -->
+      <div class="panel" data-panel="resumen">
+        <span class="etiqueta">Mi cuenta</span>
+        <h1 class="titulo">Hola, <strong id="saludo"></strong></h1>
+        <div class="tiles">
+          <div class="tile"><b id="tSistemas">–</b><span>Sistemas activos</span></div>
+          <div class="tile"><b id="tLicencias">–</b><span>Licencias activas</span></div>
+          <div class="tile"><b id="tVence">–</b><span>Próximo vencimiento</span></div>
+        </div>
+        <div id="avisos"></div>
+        <h2 class="subtitulo">Acceso rápido</h2>
+        <div class="sistemas" id="accesoRapido"></div>
+      </div>
+
+      <!-- Sistemas -->
+      <div class="panel" data-panel="sistemas" hidden>
+        <span class="etiqueta">Mis sistemas</span>
+        <h1 class="titulo">Sistemas <strong>adquiridos</strong></h1>
+        <div class="sistemas" id="listaSistemas"></div>
+      </div>
+
+      <!-- Licencias -->
+      <div class="panel" data-panel="licencias" hidden>
+        <span class="etiqueta">Mis licencias</span>
+        <h1 class="titulo">Licencias y <strong>planes</strong></h1>
+        <div class="tabla-envoltura">
+          <table class="tabla">
+            <thead><tr><th>Sistema</th><th>Plan</th><th>Clave de licencia</th><th>Inicio</th><th>Vence</th><th>Usuarios</th><th>Estado</th></tr></thead>
+            <tbody id="tablaLicencias"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Solicitudes -->
+      <div class="panel" data-panel="solicitudes" hidden>
+        <span class="etiqueta">Mis solicitudes</span>
+        <h1 class="titulo">Solicitudes de <strong>planes</strong></h1>
+        <div class="tabla-envoltura">
+          <table class="tabla">
+            <thead><tr><th>Fecha</th><th>Plan</th><th>Estado</th></tr></thead>
+            <tbody id="tablaSolicitudes"></tbody>
+          </table>
+        </div>
+        <a class="btn btn--borde" href="planes.html">Solicitar otro plan <span class="flecha">→</span></a>
+      </div>
+
+      <!-- Perfil -->
+      <div class="panel" data-panel="perfil" hidden>
+        <span class="etiqueta">Mi perfil</span>
+        <h1 class="titulo">Datos de la <strong>cuenta</strong></h1>
+        <div class="perfil-grid">
+          <form class="form tarjeta" id="formPerfil">
+            <h2 class="subtitulo">Datos personales</h2>
+            <div class="campo"><label for="p-nombre">Nombre</label><input id="p-nombre" name="nombre" required maxlength="120"></div>
+            <div class="campo"><label for="p-email">Correo</label><input id="p-email" name="email" type="email" disabled></div>
+            <div class="campo"><label for="p-empresa">Empresa</label><input id="p-empresa" name="empresa" maxlength="160"></div>
+            <div class="campo"><label for="p-tel">Teléfono</label><input id="p-tel" name="telefono" maxlength="40"></div>
+            <div><button class="btn" type="submit">Guardar cambios</button></div>
+            <p class="form__estado" id="estadoPerfil" role="status"></p>
+          </form>
+          <form class="form tarjeta" id="formClave">
+            <h2 class="subtitulo">Cambiar contraseña</h2>
+            <div class="campo"><label for="c-actual">Contraseña actual</label><input id="c-actual" name="actual" type="password" autocomplete="current-password" required></div>
+            <div class="campo"><label for="c-nueva">Nueva contraseña</label><input id="c-nueva" name="nueva" type="password" autocomplete="new-password" minlength="8" required></div>
+            <div class="campo"><label for="c-repetir">Repetir nueva contraseña</label><input id="c-repetir" name="repetir" type="password" autocomplete="new-password" minlength="8" required></div>
+            <div><button class="btn" type="submit">Actualizar contraseña</button></div>
+            <p class="form__estado" id="estadoClave" role="status"></p>
+          </form>
+        </div>
+        <p class="texto texto--chico" id="infoCuenta"></p>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="contenedor">
+      <img src="img/vimod-logo.png" alt="VIMOD">
+      <p>© <span id="anio"></span> VIMOD · Arquitectura y Diseño. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/perfil.js"></script>
+</body>
+</html>

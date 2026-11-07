@@ -9,3 +9,5 @@ services:
     envVars:
       - key: MONGODB_URI
         sync: false
+      - key: SESSION_SECRET
+        generateValue: true

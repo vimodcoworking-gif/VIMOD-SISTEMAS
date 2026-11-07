@@ -1,0 +1,116 @@
+// API del área de clientes: login y "Mi cuenta".
+const express = require('express');
+const mongoose = require('mongoose');
+const Usuario = require('../models/Usuario');
+const Licencia = require('../models/Licencia');
+const Sistema = require('../models/Sistema');
+const Solicitud = require('../models/Solicitud');
+const planes = require('../data/planes');
+const auth = require('../lib/auth');
+
+const router = express.Router();
+const COOKIE = 'vimod_sesion';
+const HORAS = 24 * 7;
+const HASH_FALSO = auth.hashPassword('sin-usuario'); // para que el tiempo de respuesta no delate si el correo existe
+
+const a = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const nombrePlan = (id) => (planes.find((p) => p.id === id) || {}).nombre || id;
+
+router.use((req, res, next) =>
+  mongoose.connection.readyState === 1 ? next() : res.status(503).json({ error: 'Base de datos no disponible' })
+);
+
+// ---- Sesión ----
+router.post('/auth/login', auth.limitador(10, 15 * 60e3), a(async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  if (!email || !password) return res.status(400).json({ error: 'Ingresa tu correo y contraseña' });
+
+  const u = await Usuario.findOne({ email }).select('+passwordHash');
+  const ok = auth.verificarPassword(password, u ? u.passwordHash : HASH_FALSO);
+  if (!u || !ok) return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+  if (!u.activo) return res.status(403).json({ error: 'Tu cuenta está desactivada. Contáctanos para reactivarla.' });
+
+  await Usuario.updateOne({ _id: u._id }, { ultimoAcceso: new Date() });
+  auth.iniciarSesion(req, res, COOKIE, { sub: u.id }, HORAS);
+  res.json({ ok: true });
+}));
+
+router.post('/auth/logout', (req, res) => {
+  auth.cerrarSesion(req, res, COOKIE);
+  res.json({ ok: true });
+});
+
+const requiereSesion = a(async (req, res, next) => {
+  const sesion = auth.leerSesion(req, COOKIE);
+  const u = sesion && mongoose.isValidObjectId(sesion.sub) ? await Usuario.findById(sesion.sub) : null;
+  if (!u || !u.activo) {
+    auth.cerrarSesion(req, res, COOKIE);
+    return res.status(401).json({ error: 'Tu sesión expiró. Vuelve a iniciar sesión.' });
+  }
+  req.usuario = u;
+  next();
+});
+
+// ---- Mi cuenta ----
+const perfil = (u) => ({
+  nombre: u.nombre,
+  email: u.email,
+  empresa: u.empresa || '',
+  telefono: u.telefono || '',
+  creado: u.createdAt,
+  ultimoAcceso: u.ultimoAcceso
+});
+
+router.get('/cuenta', requiereSesion, (req, res) => res.json(perfil(req.usuario)));
+
+router.put('/cuenta', requiereSesion, a(async (req, res) => {
+  const { nombre, empresa, telefono } = req.body;
+  Object.assign(req.usuario, { nombre, empresa, telefono });
+  await req.usuario.save();
+  res.json(perfil(req.usuario));
+}));
+
+router.put('/cuenta/password', requiereSesion, a(async (req, res) => {
+  const actual = String(req.body.actual || '');
+  const nueva = String(req.body.nueva || '');
+  if (nueva.length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
+  const u = await Usuario.findById(req.usuario._id).select('+passwordHash');
+  if (!auth.verificarPassword(actual, u.passwordHash)) return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+  u.passwordHash = auth.hashPassword(nueva);
+  await u.save();
+  res.json({ ok: true });
+}));
+
+router.get('/cuenta/licencias', requiereSesion, a(async (req, res) => {
+  const licencias = await Licencia.find({ usuario: req.usuario._id }).populate('sistema').sort('-createdAt');
+  res.json(
+    licencias.map((l) => ({
+      id: l.id,
+      sistema: l.sistema
+        ? { id: l.sistema.id, nombre: l.sistema.nombre, descripcion: l.sistema.descripcion || '', url: l.sistema.url || '' }
+        : { id: null, nombre: 'Sistema no disponible', descripcion: '', url: '' },
+      plan: l.plan,
+      planNombre: nombrePlan(l.plan),
+      clave: l.clave,
+      estado: l.estadoReal,
+      fechaInicio: l.fechaInicio,
+      fechaVencimiento: l.fechaVencimiento,
+      maxUsuarios: l.maxUsuarios
+    }))
+  );
+}));
+
+router.get('/cuenta/solicitudes', requiereSesion, a(async (req, res) => {
+  const lista = await Solicitud.find({ email: req.usuario.email }).sort('-createdAt').limit(50);
+  res.json(lista.map((s) => ({ id: s.id, plan: nombrePlan(s.plan), estado: s.estado || 'pendiente', fecha: s.createdAt })));
+}));
+
+// Errores de validación → 400; el resto → 500.
+router.use((err, req, res, next) => {
+  if (err.name === 'ValidationError' || err.name === 'CastError') return res.status(400).json({ error: err.message });
+  console.error(err);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
+
+module.exports = router;

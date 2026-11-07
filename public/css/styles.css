@@ -228,3 +228,121 @@ a { color: inherit; text-decoration: none; }
   .revelar { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
 }
+
+/* ===== Enlace Acceder en el menú ===== */
+.nav__links a.nav__acceder { border: 1px solid var(--gris); padding: 7px 16px; color: var(--blanco); transition: background .3s, color .3s, border-color .3s; }
+.nav__links a.nav__acceder::after { display: none; }
+.nav__links a.nav__acceder:hover, .nav__links a.nav__acceder.activo { background: var(--blanco); color: var(--negro); border-color: var(--blanco); }
+
+/* ===== Acceder (login de clientes) ===== */
+.acceso {
+  min-height: 100vh; display: grid; place-items: center; padding: 140px 16px 80px;
+  background: radial-gradient(ellipse at top, var(--grafito), var(--negro) 70%);
+}
+.acceso__caja { width: min(440px, 100%); border: 1px solid var(--gris-oscuro); background: var(--carbon); padding: 48px 38px; }
+.acceso__caja .titulo { font-size: 2.2rem; margin-bottom: 14px; }
+.acceso__caja .texto { margin-bottom: 30px; font-size: .92rem; }
+.acceso__caja .btn { width: 100%; justify-content: center; }
+.acceso__ayuda { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--gris-oscuro); font-size: .82rem; color: var(--gris); }
+.acceso__ayuda a { color: var(--blanco); border-bottom: 1px solid var(--gris); }
+.campo__clave { position: relative; display: flex; }
+.campo__clave input { flex: 1; padding-right: 70px; }
+.campo__ver {
+  position: absolute; right: 0; bottom: 8px; background: none; border: 0; cursor: pointer; color: var(--gris);
+  font: 600 .65rem var(--font); letter-spacing: .2em; text-transform: uppercase;
+}
+.campo__ver:hover { color: var(--blanco); }
+
+/* ===== Mi cuenta ===== */
+.btn--chico { padding: 11px 18px; font-size: .68rem; }
+.cuenta { display: grid; grid-template-columns: 260px 1fr; gap: 50px; padding: 130px 0 100px; min-height: 100vh; align-items: start; }
+.cuenta[aria-busy="true"] .cuenta__panel { opacity: .4; }
+.cuenta__lateral { position: sticky; top: 100px; display: grid; gap: 28px; }
+.cuenta__usuario { display: flex; align-items: center; gap: 14px; padding-bottom: 24px; border-bottom: 1px solid var(--gris-oscuro); min-width: 0; }
+.cuenta__usuario > div:last-child { min-width: 0; }
+.cuenta__usuario b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cuenta__usuario span { display: block; font-size: .78rem; color: var(--gris); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avatar {
+  flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--blanco); color: var(--negro); font-weight: 700; letter-spacing: .05em;
+}
+.cuenta__menu { display: grid; gap: 2px; }
+.cuenta__menu a {
+  padding: 12px 14px; font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 500;
+  color: var(--gris-claro); border-left: 2px solid transparent; transition: background .2s, color .2s, border-color .2s;
+}
+.cuenta__menu a:hover { color: var(--blanco); background: var(--carbon); }
+.cuenta__menu a.activo { color: var(--blanco); border-left-color: var(--blanco); background: var(--grafito); }
+.cuenta__panel { min-width: 0; transition: opacity .3s; }
+.panel { animation: aparecer .35s ease; }
+.panel > .btn { margin-top: 30px; }
+.subtitulo { font-size: .78rem; letter-spacing: .3em; text-transform: uppercase; font-weight: 600; margin: 44px 0 20px; }
+.tarjeta .subtitulo { margin-top: 0; }
+.texto--chico { font-size: .8rem; color: var(--gris); }
+
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.tile { border: 1px solid var(--gris-oscuro); background: var(--carbon); padding: 26px 24px; }
+.tile b { display: block; font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.tile span { font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gris); }
+
+.aviso-caja { margin-top: 20px; border: 1px solid var(--gris); border-left: 3px solid var(--blanco); background: var(--grafito); padding: 18px 22px; display: grid; gap: 6px; font-size: .9rem; }
+.aviso-caja a { font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; margin-top: 6px; }
+
+.sistemas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.sistema { border: 1px solid var(--gris-oscuro); background: var(--carbon); padding: 28px 26px; display: flex; flex-direction: column; gap: 16px; transition: border-color .3s; }
+.sistema:hover { border-color: var(--gris); }
+.sistema__cabecera { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.sistema h3 { font-size: 1.25rem; font-weight: 600; }
+.sistema__desc { color: var(--gris-claro); font-size: .88rem; flex: 1; }
+.sistema__datos { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: .88rem; }
+.sistema__datos b { display: block; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
+.sistema .btn { justify-content: center; }
+
+.insignia {
+  display: inline-block; white-space: nowrap; font-size: .62rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  padding: 4px 10px; border: 1px solid var(--gris); color: var(--gris-claro);
+}
+.insignia--activa, .insignia--atendida { background: var(--blanco); color: var(--negro); border-color: var(--blanco); }
+.insignia--vencida, .insignia--suspendida, .insignia--descartada { border-style: dashed; color: var(--gris); }
+
+.tabla-envoltura { overflow-x: auto; border: 1px solid var(--gris-oscuro); }
+.tabla { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.tabla th { text-align: left; font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gris); font-weight: 500; padding: 14px 16px; background: var(--carbon); border-bottom: 1px solid var(--gris-oscuro); white-space: nowrap; }
+.tabla td { padding: 14px 16px; border-bottom: 1px solid var(--grafito); vertical-align: middle; }
+.tabla tr:last-child td { border-bottom: 0; }
+.tabla__vacia { text-align: center; color: var(--gris); padding: 34px 16px !important; }
+.clave { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; letter-spacing: .05em; white-space: nowrap; }
+.copiar {
+  background: none; border: 1px solid var(--gris-oscuro); color: var(--gris-claro); cursor: pointer; margin-left: 6px;
+  font: 600 .58rem var(--font); letter-spacing: .15em; text-transform: uppercase; padding: 4px 8px;
+}
+.copiar:hover { border-color: var(--blanco); color: var(--blanco); }
+
+.vacio { border: 1px dashed var(--gris-oscuro); padding: 36px; text-align: center; color: var(--gris); display: grid; gap: 18px; justify-items: center; grid-column: 1 / -1; }
+
+.perfil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.tarjeta { border: 1px solid var(--gris-oscuro); background: var(--carbon); padding: 30px 28px; }
+.campo input:disabled { color: var(--gris); }
+#infoCuenta { margin-top: 20px; }
+
+@media (max-width: 900px) {
+  .cuenta { grid-template-columns: 1fr; gap: 30px; padding-top: 110px; }
+  .cuenta__lateral { position: static; }
+  .cuenta__menu { grid-auto-flow: column; overflow-x: auto; gap: 0; border-bottom: 1px solid var(--gris-oscuro); }
+  .cuenta__menu a { border-left: 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .cuenta__menu a.activo { border-bottom-color: var(--blanco); }
+  .cuenta__lateral .btn--chico { justify-self: start; }
+  .perfil-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .tiles { grid-template-columns: 1fr; }
+  .acceso__caja { padding: 38px 24px; }
+  /* Tablas como tarjetas en móvil */
+  .tabla-envoltura { border: 0; }
+  .tabla thead { display: none; }
+  .tabla tr { display: block; border: 1px solid var(--gris-oscuro); margin-bottom: 12px; padding: 8px 0; }
+  .tabla td { display: flex; justify-content: space-between; gap: 12px; border: 0; padding: 8px 16px; }
+  .tabla td::before { content: attr(data-col); font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gris); }
+  .tabla td.tabla__vacia { display: block; }
+  .tabla td.tabla__vacia::before { content: none; }
+}

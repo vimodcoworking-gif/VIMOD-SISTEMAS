@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceder | VIMOD</title>
+  <meta name="description" content="Accede a tu cuenta VIMOD para ver tus sistemas y licencias.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="img/vimod-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="nav solida" id="nav">
+    <div class="contenedor">
+      <a href="index.html" class="nav__logo"><img src="img/vimod-logo.png" alt="VIMOD Arquitectura y Diseño"></a>
+      <button class="nav__toggle" id="navToggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="index.html#inicio">Inicio</a></li>
+        <li><a href="index.html#nosotros">Nosotros</a></li>
+        <li><a href="index.html#proyectos">Nuestros proyectos</a></li>
+        <li><a href="index.html#softwares">Nuestros softwares</a></li>
+        <li><a href="index.html#contacto">Contacto</a></li>
+        <li><a href="acceder.html" class="nav__acceder activo" data-acceso>Acceder</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="acceso">
+    <div class="acceso__caja">
+      <span class="etiqueta">Área de clientes</span>
+      <h1 class="titulo">Accede a tu <strong>cuenta</strong></h1>
+      <p class="texto">Consulta tus sistemas, licencias y solicitudes en un solo lugar.</p>
+
+      <form class="form" id="formAcceso" novalidate>
+        <div class="campo"><label for="a-email">Correo</label><input id="a-email" name="email" type="email" autocomplete="username" required></div>
+        <div class="campo">
+          <label for="a-password">Contraseña</label>
+          <div class="campo__clave">
+            <input id="a-password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="campo__ver" id="verClave" aria-label="Mostrar contraseña">Ver</button>
+          </div>
+        </div>
+        <div><button class="btn" type="submit">Ingresar <span class="flecha">→</span></button></div>
+        <p class="form__estado" id="estadoAcceso" role="status"></p>
+      </form>
+
+      <p class="acceso__ayuda">¿Aún no tienes cuenta? Tu cuenta se crea al adquirir un plan.
+        <a href="planes.html">Ver planes</a> · <a href="index.html#contacto">Contáctanos</a></p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="contenedor">
+      <img src="img/vimod-logo.png" alt="VIMOD">
+      <p>© <span id="anio"></span> VIMOD · Arquitectura y Diseño. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/acceder.js"></script>
+</body>
+</html>
