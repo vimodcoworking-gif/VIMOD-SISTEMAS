@@ -19,7 +19,8 @@ app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] })
 // ---- Conexión a MongoDB ----
 if (MONGODB_URI) {
   mongoose
-    .connect(MONGODB_URI)
+    // Siempre la misma base para la página y el panel, aunque la URI no incluya el nombre
+    .connect(MONGODB_URI, { dbName: process.env.MONGODB_DB || 'vimod' })
     .then(async () => {
       console.log('✔ Conectado a MongoDB');
       await sitio.sembrar().catch((err) => console.error('✖ Error preparando el contenido:', err.message));
