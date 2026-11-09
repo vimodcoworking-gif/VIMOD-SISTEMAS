@@ -40,6 +40,7 @@
       <nav class="cuenta__menu" aria-label="Secciones de mi cuenta">
         <a href="#resumen" data-tab="resumen">Resumen</a>
         <a href="#sistemas" data-tab="sistemas">Mis sistemas</a>
+        <a href="#catalogo" data-tab="catalogo">Sistemas</a>
         <a href="#licencias" data-tab="licencias">Mis licencias</a>
         <a href="#solicitudes" data-tab="solicitudes">Mis solicitudes</a>
         <a href="#perfil" data-tab="perfil">Mi perfil</a>
@@ -76,6 +77,17 @@
           <h2 class="subtitulo">Tus licencias</h2>
         </div>
         <div class="sistemas" id="listaSistemas"></div>
+      </div>
+
+      <!-- Catálogo de sistemas (softwares publicados y sus planes) -->
+      <div class="panel" data-panel="catalogo" hidden>
+        <div id="catalogoLista">
+          <span class="etiqueta">Sistemas</span>
+          <h1 class="titulo">Nuestros <strong>sistemas</strong></h1>
+          <p class="texto" style="margin:-10px 0 28px">Elige un sistema para ver sus planes y precios.</p>
+          <div class="catalogo" id="catalogoSistemas"><p class="texto texto--chico">Cargando…</p></div>
+        </div>
+        <div id="catalogoPlanes" hidden></div>
       </div>
 
       <!-- Licencias -->

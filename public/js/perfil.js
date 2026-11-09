@@ -31,7 +31,7 @@ async function api(url, opciones = {}) {
 }
 
 // ---- Pestañas ----
-const pestañas = ['resumen', 'sistemas', 'licencias', 'solicitudes', 'perfil'];
+const pestañas = ['resumen', 'sistemas', 'catalogo', 'licencias', 'solicitudes', 'perfil'];
 function mostrarPestaña() {
   const actual = pestañas.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'resumen';
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== actual));
@@ -230,8 +230,87 @@ async function verClaveEmpresa(boton) {
   }
 }
 
+// Softwares publicados con sus planes (se piden una sola vez)
+let promesaSoftwares;
+const obtenerSoftwares = () =>
+  (promesaSoftwares ||= fetch('/api/sitio')
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+    .then((d) => d.softwares || [])
+    .catch((e) => { promesaSoftwares = null; throw e; }));
+
+const textoPrecio = (p) => p.precio == null
+  ? 'A medida'
+  : `$${Number(p.precio).toLocaleString('es', { maximumFractionDigits: 2 })}${p.periodo ? ' / ' + esc(p.periodo) : ''}`;
+
+// ---- Catálogo: lista de sistemas → planes del sistema elegido ----
+async function pintarCatalogo() {
+  const caja = $('catalogoSistemas');
+  let lista;
+  try {
+    lista = await obtenerSoftwares();
+  } catch {
+    caja.innerHTML = '<p class="texto">No se pudieron cargar los sistemas. Inténtalo de nuevo en unos momentos.</p>';
+    return;
+  }
+  if (!lista.length) {
+    caja.innerHTML = vacio('Pronto publicaremos nuestros sistemas.');
+    return;
+  }
+  caja.innerHTML = lista.map((s) => {
+    const img = /^(https?:\/\/|\/imagenes\/)/i.test(s.imagen || '') ? s.imagen : '';
+    const conPrecio = (s.planes || []).filter((p) => p.precio != null).sort((a, b) => a.precio - b.precio);
+    const desde = conPrecio.length ? `Desde ${textoPrecio(conPrecio[0])}` : (s.planes || []).length ? 'Precio a medida' : 'Consultar';
+    return `
+      <button class="catalogo__item" type="button" data-ver-software="${esc(s._id)}">
+        <span class="catalogo__img">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}</span>
+        <span class="catalogo__cuerpo">
+          <b>${esc(s.nombre)}</b>
+          ${s.etiqueta ? `<span class="chip">${esc(s.etiqueta)}</span>` : ''}
+          ${s.resumen || s.descripcion ? `<span class="texto texto--chico">${esc(s.resumen || s.descripcion)}</span>` : ''}
+          <span class="catalogo__pie">
+            <span>${(s.planes || []).length} plan${(s.planes || []).length === 1 ? '' : 'es'} · ${desde}</span>
+            <span class="catalogo__ver">Ver planes <span class="flecha">→</span></span>
+          </span>
+        </span>
+      </button>`;
+  }).join('');
+}
+
+async function verPlanesSoftware(id) {
+  const s = (await obtenerSoftwares()).find((x) => x._id === id);
+  if (!s) return;
+  const planes = s.planes || [];
+  $('catalogoLista').hidden = true;
+  const caja = $('catalogoPlanes');
+  caja.hidden = false;
+  caja.innerHTML = `
+    <button class="volver-catalogo" type="button" data-volver-catalogo>← Todos los sistemas</button>
+    <span class="etiqueta">Planes</span>
+    <h1 class="titulo">${esc(s.nombre)}</h1>
+    ${s.textoPlanes || s.descripcion ? `<p class="texto" style="margin:-10px 0 30px">${esc(s.textoPlanes || s.descripcion)}</p>` : ''}
+    ${planes.length ? `<div class="catalogo-planes">${planes.map((p) => `
+      <article class="plan${p.destacado ? ' plan--destacado' : ''}">
+        ${p.destacado ? '<span class="plan__badge">Más elegido</span>' : ''}
+        <h2 class="plan__nombre">${esc(p.nombre)}</h2>
+        <div class="plan__precio${p.precio == null ? ' plan__precio--texto' : ''}">${p.precio == null ? 'A medida'
+          : `$${Number(p.precio).toLocaleString('es', { maximumFractionDigits: 2 })}${p.periodo ? `<small> / ${esc(p.periodo)}</small>` : ''}`}</div>
+        ${p.descripcion ? `<p class="plan__desc">${esc(p.descripcion)}</p>` : ''}
+        <ul class="lista-check">${(p.caracteristicas || []).map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+        <button class="btn" type="button" data-elegir-plan="${esc(p.codigo)}" data-software="${esc(s._id)}">
+          ${p.precio == null ? 'Solicitar cotización' : 'Elegir plan'} <span class="flecha">→</span>
+        </button>
+      </article>`).join('')}</div>`
+      : vacio('Este sistema aún no tiene planes publicados. Escríbenos y te enviamos una propuesta.')}`;
+  window.scrollTo(0, 0);
+}
+
+function volverCatalogo() {
+  $('catalogoPlanes').hidden = true;
+  $('catalogoLista').hidden = false;
+}
+
 // ---- Plan elegido en la página de planes (?s=…&plan=…) ----
-const pedidoPlan = (() => {
+let pedidoPlan = (() => {
   const q = new URLSearchParams(location.search);
   if (q.get('s') && q.get('plan')) {
     const p = { s: q.get('s'), plan: q.get('plan') };
@@ -243,6 +322,7 @@ const pedidoPlan = (() => {
 
 function olvidarPlan() {
   try { sessionStorage.removeItem('vimod_plan'); } catch {}
+  pedidoPlan = null;
   history.replaceState(null, '', location.pathname + location.hash);
   $('confirmarPlan').hidden = true;
   $('confirmarPlan').innerHTML = '';
@@ -252,7 +332,7 @@ async function mostrarPlanElegido() {
   if (!pedidoPlan) return;
   let software, plan;
   try {
-    const { softwares } = await fetch('/api/sitio').then((r) => r.json());
+    const softwares = await obtenerSoftwares();
     software = softwares.find((s) => s._id === pedidoPlan.s);
     plan = software && software.planes.find((p) => p.codigo === pedidoPlan.plan);
   } catch { /* se avisa abajo */ }
@@ -269,9 +349,7 @@ async function mostrarPlanElegido() {
       </div>`;
     return;
   }
-  const precio = plan.precio == null
-    ? 'A medida'
-    : `$${Number(plan.precio).toLocaleString('es', { maximumFractionDigits: 2 })}${plan.periodo ? ' / ' + esc(plan.periodo) : ''}`;
+  const precio = textoPrecio(plan);
   caja.innerHTML = `
     <div class="confirmar-plan">
       <span class="etiqueta">Plan seleccionado</span>
@@ -282,7 +360,7 @@ async function mostrarPlanElegido() {
       <p class="texto texto--chico">Al confirmar, VIMOD recibe tu solicitud con los datos de tu perfil y te contactará para activar tu licencia.</p>
       <div class="confirmar-plan__acciones">
         <button class="btn" type="button" data-plan-confirmar>${plan.precio == null ? 'Solicitar cotización' : 'Confirmar plan'} <span class="flecha">→</span></button>
-        <a class="btn btn--borde" href="planes.html?s=${encodeURIComponent(software._id)}">Cambiar de plan</a>
+        <button class="btn btn--borde" type="button" data-cambiar-plan="${esc(software._id)}">Cambiar de plan</button>
         <button class="btn btn--borde" type="button" data-plan-cancelar>Cancelar</button>
       </div>
       <p class="form__estado" id="estadoPlan" role="status"></p>
@@ -325,6 +403,7 @@ async function cargar() {
     $('cuenta').removeAttribute('aria-busy');
   }
   mostrarPlanElegido();
+  pintarCatalogo();
 }
 
 // ---- Acciones ----
@@ -334,6 +413,21 @@ document.addEventListener('click', async (e) => {
   const confirmar = e.target.closest('[data-plan-confirmar]');
   if (confirmar) return confirmarPlan(confirmar);
   if (e.target.closest('[data-plan-cancelar]')) return olvidarPlan();
+  const software = e.target.closest('[data-ver-software]');
+  if (software) return verPlanesSoftware(software.dataset.verSoftware);
+  if (e.target.closest('[data-volver-catalogo]')) return volverCatalogo();
+  const elegir = e.target.closest('[data-elegir-plan]');
+  if (elegir) {
+    pedidoPlan = { s: elegir.dataset.software, plan: elegir.dataset.elegirPlan };
+    try { sessionStorage.setItem('vimod_plan', JSON.stringify(pedidoPlan)); } catch {}
+    return mostrarPlanElegido();
+  }
+  const cambiar = e.target.closest('[data-cambiar-plan]');
+  if (cambiar) {
+    olvidarPlan();
+    location.hash = 'catalogo';
+    return verPlanesSoftware(cambiar.dataset.cambiarPlan);
+  }
   const boton = e.target.closest('[data-copiar]');
   if (!boton) return;
   try {
