@@ -40,12 +40,6 @@
         <button type="button" role="tab" data-modo="registro" aria-selected="false">Crear cuenta</button>
       </div>
 
-      <div class="acceso__google" id="bloqueGoogle" hidden>
-        <div id="botonGoogle" class="acceso__google-boton"></div>
-        <p class="form__estado" id="estadoGoogle" role="status"></p>
-        <div class="separador"><span>o con tu correo</span></div>
-      </div>
-
       <form class="form" id="formAcceso" novalidate>
         <div class="campo"><label for="a-email">Correo</label><input id="a-email" name="email" type="email" autocomplete="username" required></div>
         <div class="campo">
@@ -69,6 +63,13 @@
         <div><button class="btn" type="submit">Crear cuenta <span class="flecha">→</span></button></div>
         <p class="form__estado" id="estadoRegistro" role="status"></p>
       </form>
+
+      <!-- Google va debajo de los botones Ingresar / Crear cuenta -->
+      <div class="acceso__google" id="bloqueGoogle" hidden>
+        <div class="separador"><span>o continúa con</span></div>
+        <div id="botonGoogle" class="acceso__google-boton"></div>
+        <p class="form__estado" id="estadoGoogle" role="status"></p>
+      </div>
 
       <p class="acceso__ayuda" id="ayudaIngresar">¿Aún no tienes cuenta? <a href="#registro" data-ir="registro">Créala gratis</a> · <a href="planes.html">Ver planes</a></p>
       <p class="acceso__ayuda" id="ayudaRegistro" hidden>¿Ya tienes cuenta? <a href="#ingresar" data-ir="ingresar">Inicia sesión</a></p>
