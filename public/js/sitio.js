@@ -40,10 +40,10 @@
           </div>
           ${c.texto ? `<p class="texto" style="max-width:40ch">${esc(c.texto)}</p>` : ''}
         </div>
-        <div class="galeria">${items.map((p, i) => {
+        <div class="galeria" data-cantidad="${items.length}">${items.map((p) => {
           const img = urlImagen(p.imagen);
           return `
-          <article class="proyecto${i === 0 && items.length > 1 ? ' proyecto--ancho' : ''} revelar">
+          <article class="proyecto revelar">
             ${img ? `<img src="${esc(img)}" alt="${esc(p.titulo)}" loading="lazy">` : ''}
             <div class="proyecto__info"><p>${esc(p.categoria)}</p><h3>${esc(p.titulo)}</h3></div>
           </article>`;

@@ -21,8 +21,9 @@ body {
   color: var(--blanco);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
-img { max-width: 100%; display: block; }
+img, video { max-width: 100%; display: block; }
 [hidden] { display: none !important; }
 a { color: inherit; text-decoration: none; }
 
@@ -52,7 +53,7 @@ a { color: inherit; text-decoration: none; }
 .nav__toggle span { display: block; width: 26px; height: 2px; background: var(--blanco); margin: 5px 0; transition: .3s; }
 
 /* ===== Hero con video ===== */
-.hero { position: relative; height: 100vh; min-height: 560px; overflow: hidden; display: grid; place-items: center; text-align: center; }
+.hero { position: relative; height: 100vh; height: 100svh; min-height: 480px; overflow: hidden; display: grid; place-items: center; text-align: center; }
 .hero__video {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
 }
@@ -95,16 +96,33 @@ a { color: inherit; text-decoration: none; }
 
 /* Proyectos */
 .proyectos__cabecera { display: flex; justify-content: space-between; align-items: end; gap: 20px; flex-wrap: wrap; margin-bottom: 50px; }
-.galeria { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.proyecto { position: relative; overflow: hidden; aspect-ratio: 4/5; background: var(--grafito); }
-.proyecto--ancho { grid-column: span 2; aspect-ratio: auto; }
-.proyecto img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: transform .8s, filter .8s; }
+/* La galería se adapta a la cantidad de proyectos (data-cantidad) y al ancho de pantalla.
+   Las tarjetas son horizontales para que las capturas de sitios web no se recorten de lado. */
+.galeria { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+.proyecto { position: relative; overflow: hidden; grid-column: span 2; aspect-ratio: 4/3; background: var(--grafito); }
+.proyecto img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;
+  filter: grayscale(100%); transition: transform .8s, filter .8s;
+}
 .proyecto:hover img { transform: scale(1.06); filter: grayscale(0%); }
 .proyecto__info {
-  position: absolute; inset: auto 0 0 0; padding: 26px;
+  position: absolute; inset: auto 0 0 0; z-index: 1; padding: 26px;
   background: linear-gradient(transparent, rgba(0,0,0,.85));
 }
-.proyecto__info h3 { font-weight: 600; font-size: 1.15rem; }
+.proyecto__info h3 { font-weight: 600; font-size: clamp(1rem, 2.2vw, 1.15rem); }
+@media (min-width: 901px) {
+  /* 5 o más: el primero grande (2×2) y el resto en filas de tres */
+  .galeria .proyecto:first-child { grid-column: span 4; grid-row: span 2; aspect-ratio: auto; }
+  .galeria[data-cantidad="5"] .proyecto:nth-child(n+4) { grid-column: span 3; aspect-ratio: 16/10; }
+  /* 1 proyecto: ancho completo */
+  .galeria[data-cantidad="1"] .proyecto { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 21/9; }
+  /* 2 y 4 proyectos: dos columnas iguales */
+  .galeria[data-cantidad="2"] .proyecto,
+  .galeria[data-cantidad="4"] .proyecto { grid-column: span 3; grid-row: auto; aspect-ratio: 16/10; }
+  /* 3 proyectos: uno ancho arriba y dos abajo */
+  .galeria[data-cantidad="3"] .proyecto { grid-column: span 3; grid-row: auto; aspect-ratio: 16/10; }
+  .galeria[data-cantidad="3"] .proyecto:first-child { grid-column: 1 / -1; aspect-ratio: 21/9; }
+}
 .proyecto__info p { font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gris-claro); }
 
 /* Software */
@@ -114,7 +132,12 @@ a { color: inherit; text-decoration: none; }
   background: var(--grafito); transition: border-color .3s, transform .3s;
 }
 .software__card:hover { border-color: var(--blanco); transform: translateY(-4px); }
-.software__card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; filter: grayscale(100%); opacity: .8; }
+/* La imagen conserva su proporción original: se ve completa, sin recortes */
+.software__card img {
+  width: 100%; height: auto; max-height: 70vh; object-fit: contain; background: var(--negro);
+  filter: grayscale(100%); opacity: .8; transition: filter .5s, opacity .5s;
+}
+.software__card:hover img { filter: grayscale(0%); opacity: 1; }
 .software__card-cuerpo { padding: 30px; }
 .software__card h3 { font-size: 1.6rem; font-weight: 200; }
 .software__card h3 strong { font-weight: 700; }
@@ -215,15 +238,32 @@ a { color: inherit; text-decoration: none; }
   .seccion { padding: 80px 0; }
   .nosotros, .software, .contacto { grid-template-columns: 1fr; gap: 50px; }
   .nosotros__img::after { inset: 14px -10px -14px 10px; }
-  .galeria { grid-template-columns: 1fr 1fr; }
-  .proyecto--ancho { grid-column: span 2; aspect-ratio: 16/10; }
+  .galeria { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .proyecto { grid-column: auto; aspect-ratio: 4/3; }
+  /* Si la cantidad es impar, el primero ocupa todo el ancho */
+  .proyecto:first-child:nth-last-child(odd) { grid-column: 1 / -1; aspect-ratio: 16/9; }
+  .proyectos__cabecera { margin-bottom: 34px; }
   .planes { grid-template-columns: 1fr; max-width: 480px; margin-inline: auto; gap: 40px; }
 }
 @media (max-width: 560px) {
+  .seccion { padding: 64px 0; }
   .galeria { grid-template-columns: 1fr; }
-  .proyecto--ancho { grid-column: auto; aspect-ratio: 4/5; }
-  .cifras { grid-template-columns: 1fr 1fr 1fr; }
+  .proyecto, .proyecto:first-child:nth-last-child(odd) { grid-column: auto; aspect-ratio: 16/10; }
+  .proyecto__info { padding: 18px; }
+  .cifras { grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .cifra b { font-size: 1.8rem; }
+  .cifra span { font-size: .62rem; letter-spacing: .1em; }
+  .nav__logo img { height: 38px; }
+  .software__card-cuerpo { padding: 22px; }
+  .btn { padding: 14px 22px; }
+  .plan { padding: 36px 24px; }
+  .plan__precio { font-size: 2.8rem; }
+}
+/* Pantallas medianas (laptops pequeñas): menú más compacto */
+@media (min-width: 901px) and (max-width: 1150px) {
+  .nav__links { gap: 20px; }
+  .nav__links a { font-size: .7rem; letter-spacing: .12em; }
+  .nosotros, .software, .contacto { gap: 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .revelar { opacity: 1; transform: none; transition: none; }
