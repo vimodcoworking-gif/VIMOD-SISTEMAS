@@ -111,6 +111,73 @@ a { color: inherit; text-decoration: none; }
 .proyecto:hover img { filter: grayscale(0%); }
 .proyecto__info { padding: 18px 22px 20px; border-top: 1px solid var(--gris-oscuro); }
 .proyecto__info h3 { font-weight: 600; font-size: clamp(1rem, 2.2vw, 1.15rem); }
+.proyecto--clic { cursor: pointer; }
+.proyecto--clic:focus-visible { outline: 2px solid var(--blanco); outline-offset: 3px; }
+.proyecto--clic .proyecto__info { display: flex; justify-content: space-between; align-items: end; gap: 14px; }
+.proyecto__ver {
+  flex: none; font-size: .66rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gris); transition: color .3s; white-space: nowrap;
+}
+.proyecto__ver .flecha { display: inline-block; transition: transform .3s; }
+.proyecto--clic:hover .proyecto__ver { color: var(--blanco); }
+.proyecto--clic:hover .proyecto__ver .flecha { transform: translateX(5px); }
+
+/* Ventana de detalle del proyecto */
+.sin-scroll, .sin-scroll body { overflow: hidden; }
+.modal--proyecto { padding: 24px; backdrop-filter: blur(6px); }
+.detalle {
+  position: relative; width: min(1120px, 100%); max-height: calc(100vh - 48px); max-height: calc(100svh - 48px);
+  overflow-y: auto; overscroll-behavior: contain; background: var(--carbon); border: 1px solid var(--gris-oscuro);
+  display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); animation: aparecer .3s ease;
+}
+.detalle__visor { min-width: 0; background: var(--negro); border-right: 1px solid var(--gris-oscuro); }
+.detalle__foto { position: relative; }
+.detalle__foto img { width: 100%; aspect-ratio: 16/10; object-fit: contain; background: var(--negro); }
+.detalle__flecha {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: var(--blanco);
+  font-size: 1.6rem; line-height: 1; cursor: pointer; transition: background .2s, border-color .2s;
+}
+.detalle__flecha:hover { background: var(--blanco); color: var(--negro); border-color: var(--blanco); }
+.detalle__flecha--izq { left: 12px; }
+.detalle__flecha--der { right: 12px; }
+.detalle__contador {
+  position: absolute; right: 12px; bottom: 12px; background: rgba(0,0,0,.65); padding: 4px 10px;
+  font-size: .7rem; letter-spacing: .12em; color: var(--gris-claro);
+}
+.detalle__miniaturas { display: flex; gap: 8px; overflow-x: auto; padding: 10px; border-top: 1px solid var(--gris-oscuro); scrollbar-width: thin; }
+.detalle__miniaturas button {
+  flex: 0 0 96px; aspect-ratio: 16/10; padding: 0; cursor: pointer; background: var(--grafito);
+  border: 2px solid transparent; opacity: .5; transition: opacity .2s, border-color .2s;
+}
+.detalle__miniaturas button:hover { opacity: .85; }
+.detalle__miniaturas button.activo { opacity: 1; border-color: var(--blanco); }
+.detalle__miniaturas img { width: 100%; height: 100%; object-fit: cover; }
+.detalle__cuerpo { padding: 44px 34px 34px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.detalle__cuerpo .etiqueta { margin-bottom: 0; }
+.detalle__cuerpo .texto { max-width: none; font-size: .95rem; }
+.detalle__cuerpo .btn { align-self: flex-start; margin-top: 12px; }
+.detalle__titulo { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; line-height: 1.15; }
+.detalle__cerrar {
+  position: absolute; top: 10px; right: 10px; z-index: 3; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.6); color: var(--blanco);
+  font-size: 1.6rem; line-height: 1; cursor: pointer;
+}
+.detalle__cerrar:hover { background: var(--blanco); color: var(--negro); }
+/* Sin imágenes: solo el texto */
+.detalle:not(:has(.detalle__visor)) { grid-template-columns: 1fr; width: min(640px, 100%); }
+@media (max-width: 900px) {
+  .modal--proyecto { padding: 0; }
+  .detalle {
+    grid-template-columns: 1fr; width: 100%; height: 100vh; height: 100svh;
+    max-height: none; border: 0; align-content: start;
+  }
+  .detalle__visor { border-right: 0; border-bottom: 1px solid var(--gris-oscuro); }
+  .detalle__cuerpo { padding: 26px 20px 40px; }
+  .detalle__cuerpo .btn { align-self: stretch; justify-content: center; }
+  .detalle__miniaturas button { flex-basis: 76px; }
+  .detalle__flecha { width: 38px; height: 38px; font-size: 1.4rem; }
+}
 @media (min-width: 901px) {
   /* 1 proyecto: ancho completo */
   .galeria[data-cantidad="1"] .proyecto { grid-column: 1 / -1; }

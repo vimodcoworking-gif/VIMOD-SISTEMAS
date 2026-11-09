@@ -29,8 +29,11 @@
       </div>`;
   }
 
+  let listaProyectos = [];
+
   function proyectos(c) {
     const items = (c.items || []).filter((p) => p && (p.titulo || p.imagen));
+    listaProyectos = items;
     return `
       <div class="contenedor">
         <div class="proyectos__cabecera revelar">
@@ -40,16 +43,111 @@
           </div>
           ${c.texto ? `<p class="texto" style="max-width:40ch">${esc(c.texto)}</p>` : ''}
         </div>
-        <div class="galeria" data-cantidad="${items.length}">${items.map((p) => {
+        <div class="galeria" data-cantidad="${items.length}">${items.map((p, i) => {
           const img = urlImagen(p.imagen);
           return `
-          <article class="proyecto revelar">
+          <article class="proyecto proyecto--clic revelar" data-proyecto="${i}" tabindex="0" role="button" aria-label="Ver detalles de ${esc(p.titulo)}">
             ${img ? `<img src="${esc(img)}" alt="${esc(p.titulo)}" loading="lazy">` : ''}
-            <div class="proyecto__info"><p>${esc(p.categoria)}</p><h3>${esc(p.titulo)}</h3></div>
+            <div class="proyecto__info">
+              <div><p>${esc(p.categoria)}</p><h3>${esc(p.titulo)}</h3></div>
+              <span class="proyecto__ver">Ver proyecto <span class="flecha">→</span></span>
+            </div>
           </article>`;
         }).join('')}</div>
       </div>`;
   }
+
+  // ---- Ventana con el detalle de un proyecto ----
+  const enlaceSeguro = (u) => (/^https?:\/\/\S+$/i.test(u || '') ? u : '');
+  let modal, fotos = [], fotoActual = 0, focoPrevio = null;
+
+  function crearModal() {
+    modal = document.createElement('div');
+    modal.className = 'modal modal--proyecto';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'detalleTitulo');
+    modal.innerHTML = '<div class="detalle"></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.closest('[data-cerrar]')) return cerrarDetalle();
+      const mini = e.target.closest('[data-foto]');
+      if (mini) return mostrarFoto(Number(mini.dataset.foto));
+      if (e.target.closest('[data-anterior]')) return mostrarFoto(fotoActual - 1);
+      if (e.target.closest('[data-siguiente]')) return mostrarFoto(fotoActual + 1);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('abierto')) return;
+      if (e.key === 'Escape') cerrarDetalle();
+      if (e.key === 'ArrowLeft') mostrarFoto(fotoActual - 1);
+      if (e.key === 'ArrowRight') mostrarFoto(fotoActual + 1);
+    });
+  }
+
+  function mostrarFoto(i) {
+    if (!fotos.length) return;
+    fotoActual = (i + fotos.length) % fotos.length;
+    const principal = modal.querySelector('.detalle__foto img');
+    principal.src = fotos[fotoActual];
+    modal.querySelectorAll('[data-foto]').forEach((b, k) => b.classList.toggle('activo', k === fotoActual));
+    const contador = modal.querySelector('.detalle__contador');
+    if (contador) contador.textContent = `${fotoActual + 1} / ${fotos.length}`;
+    modal.querySelector(`[data-foto="${fotoActual}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  function abrirDetalle(p) {
+    if (!modal) crearModal();
+    fotos = [p.imagen, ...(p.imagenes || [])].map(urlImagen).filter(Boolean);
+    fotos = [...new Set(fotos)];
+    fotoActual = 0;
+    const enlace = enlaceSeguro(p.enlace);
+    const parrafos = String(p.descripcion || '').split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+    const varias = fotos.length > 1;
+    modal.querySelector('.detalle').innerHTML = `
+      <button class="detalle__cerrar" type="button" data-cerrar aria-label="Cerrar">×</button>
+      ${fotos.length ? `
+      <div class="detalle__visor">
+        <div class="detalle__foto">
+          <img src="${esc(fotos[0])}" alt="${esc(p.titulo)}">
+          ${varias ? `
+          <button class="detalle__flecha detalle__flecha--izq" type="button" data-anterior aria-label="Imagen anterior">‹</button>
+          <button class="detalle__flecha detalle__flecha--der" type="button" data-siguiente aria-label="Imagen siguiente">›</button>
+          <span class="detalle__contador">1 / ${fotos.length}</span>` : ''}
+        </div>
+        ${varias ? `<div class="detalle__miniaturas">${fotos.map((f, i) => `
+          <button type="button" data-foto="${i}" class="${i ? '' : 'activo'}" aria-label="Ver imagen ${i + 1}">
+            <img src="${esc(f)}" alt="" loading="lazy">
+          </button>`).join('')}</div>` : ''}
+      </div>` : ''}
+      <div class="detalle__cuerpo">
+        ${p.categoria ? `<span class="etiqueta">${esc(p.categoria)}</span>` : ''}
+        <h3 class="detalle__titulo" id="detalleTitulo">${esc(p.titulo)}</h3>
+        ${parrafos.length ? parrafos.map((x) => `<p class="texto">${esc(x)}</p>`).join('') : ''}
+        ${enlace ? `<a class="btn" href="${esc(enlace)}" target="_blank" rel="noopener">Visitar sitio <span class="flecha">→</span></a>` : ''}
+      </div>`;
+    focoPrevio = document.activeElement;
+    modal.classList.add('abierto');
+    document.documentElement.classList.add('sin-scroll');
+    modal.querySelector('.detalle').scrollTop = 0;
+    modal.querySelector('[data-cerrar]').focus({ preventScroll: true });
+  }
+
+  function cerrarDetalle() {
+    modal.classList.remove('abierto');
+    document.documentElement.classList.remove('sin-scroll');
+    if (focoPrevio) focoPrevio.focus({ preventScroll: true });
+  }
+
+  function activarProyecto(e) {
+    const tarjeta = e.target.closest('[data-proyecto]');
+    if (!tarjeta) return;
+    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    const p = listaProyectos[Number(tarjeta.dataset.proyecto)];
+    if (p) abrirDetalle(p);
+  }
+  document.addEventListener('click', activarProyecto);
+  document.addEventListener('keydown', activarProyecto);
 
   function softwares(c, lista_) {
     if (!lista_.length) return '';
