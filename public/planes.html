@@ -41,26 +41,6 @@
     <div class="planes" id="planes"><!-- Se llena desde /api/sitio --></div>
   </main>
 
-  <!-- Modal de solicitud -->
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
-    <div class="modal__caja">
-      <button class="modal__cerrar" id="modalCerrar" aria-label="Cerrar">×</button>
-      <span class="etiqueta">Solicitud</span>
-      <h2 class="titulo" id="modalTitulo" style="font-size:2rem">Plan <strong></strong></h2>
-      <p class="texto" id="modalSoftware" style="margin:-14px 0 18px;font-size:.85rem"></p>
-      <form class="form" id="formSolicitud">
-        <input type="hidden" name="sistema">
-        <input type="hidden" name="plan">
-        <div class="campo"><label for="s-nombre">Nombre</label><input id="s-nombre" name="nombre" required maxlength="120"></div>
-        <div class="campo"><label for="s-empresa">Empresa</label><input id="s-empresa" name="empresa" maxlength="160"></div>
-        <div class="campo"><label for="s-email">Correo</label><input id="s-email" name="email" type="email" required></div>
-        <div class="campo"><label for="s-tel">Teléfono</label><input id="s-tel" name="telefono" maxlength="40"></div>
-        <div><button class="btn" type="submit">Solicitar <span class="flecha">→</span></button></div>
-        <p class="form__estado" id="estadoSolicitud" role="status"></p>
-      </form>
-    </div>
-  </div>
-
   <footer class="footer">
     <div class="contenedor">
       <img src="img/vimod-logo.png" alt="VIMOD">

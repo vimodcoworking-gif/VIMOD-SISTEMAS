@@ -337,6 +337,24 @@ a { color: inherit; text-decoration: none; }
   html { scroll-behavior: auto; }
 }
 
+/* ===== Plan elegido, por confirmar en "Mi cuenta" ===== */
+#confirmarPlan { margin-bottom: 40px; scroll-margin-top: 110px; }
+.confirmar-plan {
+  border: 1px solid var(--blanco); background: var(--grafito); padding: 30px 30px 26px;
+  display: grid; gap: 12px; animation: aparecer .35s ease;
+}
+.confirmar-plan .etiqueta { margin-bottom: 0; }
+.confirmar-plan__titulo { font-size: clamp(1.3rem, 3vw, 1.8rem); font-weight: 200; line-height: 1.2; }
+.confirmar-plan__titulo strong { font-weight: 700; }
+.confirmar-plan__precio { font-size: 2rem; font-weight: 700; line-height: 1; }
+.confirmar-plan .lista-check { margin: 6px 0; gap: 8px; }
+.confirmar-plan__acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.confirmar-plan__acciones .btn--chico, .confirmar-plan__acciones .btn { justify-content: center; }
+@media (max-width: 560px) {
+  .confirmar-plan { padding: 24px 18px 20px; }
+  .confirmar-plan__acciones .btn { flex: 1 1 100%; }
+}
+
 /* ===== Sistema de la empresa en "Mi cuenta" ===== */
 .sistema--empresa { border-color: var(--gris); }
 .clave-empresa { display: grid; gap: 8px; justify-items: start; }

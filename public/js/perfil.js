@@ -230,6 +230,86 @@ async function verClaveEmpresa(boton) {
   }
 }
 
+// ---- Plan elegido en la página de planes (?s=…&plan=…) ----
+const pedidoPlan = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('s') && q.get('plan')) {
+    const p = { s: q.get('s'), plan: q.get('plan') };
+    try { sessionStorage.setItem('vimod_plan', JSON.stringify(p)); } catch {}
+    return p;
+  }
+  try { return JSON.parse(sessionStorage.getItem('vimod_plan')) || null; } catch { return null; }
+})();
+
+function olvidarPlan() {
+  try { sessionStorage.removeItem('vimod_plan'); } catch {}
+  history.replaceState(null, '', location.pathname + location.hash);
+  $('confirmarPlan').hidden = true;
+  $('confirmarPlan').innerHTML = '';
+}
+
+async function mostrarPlanElegido() {
+  if (!pedidoPlan) return;
+  let software, plan;
+  try {
+    const { softwares } = await fetch('/api/sitio').then((r) => r.json());
+    software = softwares.find((s) => s._id === pedidoPlan.s);
+    plan = software && software.planes.find((p) => p.codigo === pedidoPlan.plan);
+  } catch { /* se avisa abajo */ }
+  const caja = $('confirmarPlan');
+  caja.hidden = false;
+  if (!plan) {
+    caja.innerHTML = `
+      <div class="confirmar-plan">
+        <p class="texto">El plan que elegiste ya no está disponible.</p>
+        <div class="confirmar-plan__acciones">
+          <a class="btn btn--borde btn--chico" href="planes.html">Ver planes</a>
+          <button class="btn btn--borde btn--chico" type="button" data-plan-cancelar>Cerrar</button>
+        </div>
+      </div>`;
+    return;
+  }
+  const precio = plan.precio == null
+    ? 'A medida'
+    : `$${Number(plan.precio).toLocaleString('es', { maximumFractionDigits: 2 })}${plan.periodo ? ' / ' + esc(plan.periodo) : ''}`;
+  caja.innerHTML = `
+    <div class="confirmar-plan">
+      <span class="etiqueta">Plan seleccionado</span>
+      <h2 class="confirmar-plan__titulo">${esc(software.nombre)} · <strong>${esc(plan.nombre)}</strong></h2>
+      <p class="confirmar-plan__precio">${precio}</p>
+      ${plan.descripcion ? `<p class="texto texto--chico">${esc(plan.descripcion)}</p>` : ''}
+      ${(plan.caracteristicas || []).length ? `<ul class="lista-check">${plan.caracteristicas.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+      <p class="texto texto--chico">Al confirmar, VIMOD recibe tu solicitud con los datos de tu perfil y te contactará para activar tu licencia.</p>
+      <div class="confirmar-plan__acciones">
+        <button class="btn" type="button" data-plan-confirmar>${plan.precio == null ? 'Solicitar cotización' : 'Confirmar plan'} <span class="flecha">→</span></button>
+        <a class="btn btn--borde" href="planes.html?s=${encodeURIComponent(software._id)}">Cambiar de plan</a>
+        <button class="btn btn--borde" type="button" data-plan-cancelar>Cancelar</button>
+      </div>
+      <p class="form__estado" id="estadoPlan" role="status"></p>
+    </div>`;
+  caja.scrollIntoView({ block: 'start' });
+}
+
+async function confirmarPlan(boton) {
+  const estado = $('estadoPlan');
+  boton.disabled = true;
+  estado.textContent = 'Enviando solicitud…';
+  try {
+    const r = await api('/cuenta/solicitudes', { method: 'POST', body: { sistema: pedidoPlan.s, plan: pedidoPlan.plan } });
+    olvidarPlan();
+    pintarSolicitudes(await api('/cuenta/solicitudes'));
+    location.hash = 'solicitudes';
+    $('avisos').innerHTML = '';
+    const aviso = document.createElement('div');
+    aviso.className = 'aviso-caja';
+    aviso.innerHTML = `<p>${r.repetida ? 'Ya tenías una solicitud pendiente para este plan.' : '¡Solicitud enviada!'} Te contactaremos pronto para activar tu licencia.</p>`;
+    document.querySelector('[data-panel="solicitudes"] .tabla-envoltura').before(aviso);
+  } catch (err) {
+    estado.textContent = 'Error: ' + err.message;
+    boton.disabled = false;
+  }
+}
+
 async function cargar() {
   try {
     const [usuario, licencias, solicitudes, empresas] = await Promise.all([
@@ -244,12 +324,16 @@ async function cargar() {
   } finally {
     $('cuenta').removeAttribute('aria-busy');
   }
+  mostrarPlanElegido();
 }
 
 // ---- Acciones ----
 document.addEventListener('click', async (e) => {
   const ver = e.target.closest('[data-ver-clave]');
   if (ver) return verClaveEmpresa(ver);
+  const confirmar = e.target.closest('[data-plan-confirmar]');
+  if (confirmar) return confirmarPlan(confirmar);
+  if (e.target.closest('[data-plan-cancelar]')) return olvidarPlan();
   const boton = e.target.closest('[data-copiar]');
   if (!boton) return;
   try {

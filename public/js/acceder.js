@@ -1,5 +1,25 @@
+// Plan elegido en la página de planes (?s=…&plan=…): se recuerda para continuar en "Mi cuenta".
+const pedidoPlan = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('s') && q.get('plan')) {
+    const p = { s: q.get('s'), plan: q.get('plan') };
+    try { sessionStorage.setItem('vimod_plan', JSON.stringify(p)); } catch {}
+    return p;
+  }
+  try { return JSON.parse(sessionStorage.getItem('vimod_plan')) || null; } catch { return null; }
+})();
+const destino = () => 'perfil.html' + (pedidoPlan ? '?' + new URLSearchParams(pedidoPlan) : '');
+
 // Si ya hay sesión, ir directo a "Mi cuenta".
-if (/(?:^|;\s*)vimod_sesion_on=1/.test(document.cookie)) location.replace('perfil.html');
+if (/(?:^|;\s*)vimod_sesion_on=1/.test(document.cookie)) location.replace(destino());
+
+if (pedidoPlan) {
+  const aviso = document.createElement('p');
+  aviso.className = 'aviso-caja';
+  aviso.style.margin = '0 0 26px';
+  aviso.textContent = 'Inicia sesión o crea tu cuenta para continuar con el plan que elegiste.';
+  document.querySelector('.acceso__caja .texto').after(aviso);
+}
 
 const formAcceso = document.getElementById('formAcceso');
 const formRegistro = document.getElementById('formRegistro');
@@ -19,7 +39,7 @@ function cambiarModo(modo) {
     b.setAttribute('aria-selected', activo);
   });
   document.title = (registro ? 'Crear cuenta' : 'Acceder') + ' | VIMOD';
-  history.replaceState(null, '', registro ? '#registro' : location.pathname);
+  history.replaceState(null, '', location.pathname + location.search + (registro ? '#registro' : ''));
 }
 document.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => cambiarModo(b.dataset.modo)));
 document.querySelectorAll('[data-ir]').forEach((a) =>
@@ -62,7 +82,7 @@ async function iniciarGoogle() {
           });
           const json = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(json.error || 'No se pudo iniciar sesión con Google');
-          location.href = 'perfil.html';
+          location.href = destino();
         } catch (err) {
           estado.textContent = err.message;
         }
@@ -89,7 +109,7 @@ async function enviar(form, url, datos, estado) {
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json.error || 'No se pudo completar');
-    location.href = 'perfil.html';
+    location.href = destino();
   } catch (err) {
     estado.textContent = err.message;
     boton.disabled = false;

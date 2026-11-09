@@ -188,6 +188,25 @@ router.get('/cuenta/solicitudes', requiereSesion, a(async (req, res) => {
   })));
 }));
 
+// El cliente con sesión solicita un plan desde su cuenta (usa sus datos de perfil).
+router.post('/cuenta/solicitudes', requiereSesion, auth.limitador(20, 60 * 60e3), a(async (req, res) => {
+  const { sistema, plan } = req.body;
+  const software = mongoose.isValidObjectId(sistema)
+    ? await Sistema.findOne({ _id: sistema, publicado: { $ne: false } }, 'nombre planes').lean()
+    : null;
+  if (!software || !software.planes.some((p) => p.codigo === plan)) {
+    return res.status(400).json({ error: 'El plan elegido ya no está disponible' });
+  }
+  const u = req.usuario;
+  // Si ya pidió este mismo plan y sigue pendiente, no se duplica.
+  const previa = await Solicitud.findOne({ email: u.email, sistema, plan, estado: 'pendiente' });
+  if (previa) return res.json({ ok: true, id: previa.id, repetida: true });
+  const doc = await Solicitud.create({
+    sistema, plan, nombre: u.nombre, empresa: u.empresa, email: u.email, telefono: u.telefono
+  });
+  res.status(201).json({ ok: true, id: doc.id });
+}));
+
 // ---- Sistema propio de la empresa (VIMOD CONTROL en el servidor) ----
 router.get('/cuenta/empresas', requiereSesion, a(async (req, res) => {
   const lista = await Empresa.find({ usuario: req.usuario._id }).select('+adminClave').sort('-createdAt').lean();

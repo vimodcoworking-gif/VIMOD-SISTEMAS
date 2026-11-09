@@ -1,8 +1,5 @@
 // Planes de cada software (editables desde el Panel administrador).
 const contenedorPlanes = document.getElementById('planes');
-const modal = document.getElementById('modal');
-const formSolicitud = document.getElementById('formSolicitud');
-const estadoSolicitud = document.getElementById('estadoSolicitud');
 const selector = document.getElementById('selectorSoftware');
 let softwares = [];
 
@@ -22,7 +19,7 @@ function tarjetaPlan(p, software) {
     ${precioTexto(p)}
     <p class="plan__desc"></p>
     <ul class="lista-check"></ul>
-    <button class="btn" type="button">${p.precio != null ? 'Elegir plan' : 'Contactar'} <span class="flecha">→</span></button>`;
+    <button class="btn" type="button">${p.precio != null ? 'Elegir plan' : 'Solicitar cotización'} <span class="flecha">→</span></button>`;
 
   art.querySelector('.plan__nombre').textContent = p.nombre;
   art.querySelector('.plan__desc').textContent = p.descripcion || '';
@@ -32,7 +29,7 @@ function tarjetaPlan(p, software) {
     li.textContent = c;
     ul.appendChild(li);
   });
-  art.querySelector('button').addEventListener('click', () => abrirModal(p, software));
+  art.querySelector('button').addEventListener('click', () => elegirPlan(p, software));
   return art;
 }
 
@@ -81,27 +78,11 @@ async function cargarPlanes() {
   }
 }
 
-function abrirModal(plan, software) {
-  formSolicitud.sistema.value = software._id;
-  formSolicitud.plan.value = plan.codigo;
-  document.querySelector('#modalTitulo strong').textContent = plan.nombre;
-  document.getElementById('modalSoftware').textContent = software.nombre;
-  estadoSolicitud.textContent = '';
-  modal.classList.add('abierto');
-  formSolicitud.nombre.focus();
+// Elegir un plan: se continúa en "Mi cuenta" (si no hay sesión, primero se inicia sesión).
+function elegirPlan(plan, software) {
+  const datos = new URLSearchParams({ s: software._id, plan: plan.codigo }).toString();
+  const conSesion = /(?:^|;\s*)vimod_sesion_on=1/.test(document.cookie);
+  location.href = (conSesion ? 'perfil.html?' : 'acceder.html?') + datos;
 }
-function cerrarModal() { modal.classList.remove('abierto'); }
-
-document.getElementById('modalCerrar').addEventListener('click', cerrarModal);
-modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
-
-formSolicitud.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const { sistema, plan } = { sistema: formSolicitud.sistema.value, plan: formSolicitud.plan.value };
-  await enviarFormulario(formSolicitud, '/api/solicitudes', estadoSolicitud);
-  formSolicitud.sistema.value = sistema;
-  formSolicitud.plan.value = plan;
-});
 
 cargarPlanes();
