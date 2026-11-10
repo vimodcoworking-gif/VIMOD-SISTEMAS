@@ -31,7 +31,7 @@ async function api(url, opciones = {}) {
 }
 
 // ---- Pestañas ----
-const pestañas = ['resumen', 'sistemas', 'catalogo', 'licencias', 'solicitudes', 'perfil'];
+const pestañas = ['resumen', 'sistemas', 'capacitacion', 'catalogo', 'licencias', 'solicitudes', 'perfil'];
 function mostrarPestaña() {
   const actual = pestañas.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'resumen';
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== actual));
@@ -388,6 +388,62 @@ async function confirmarPlan(boton) {
   }
 }
 
+// ---- Capacitación ----
+// Convierte el enlace en un reproductor (YouTube, Vimeo, Google Drive o archivo de video).
+function reproductor(url) {
+  const u = urlSegura(url);
+  if (!u) return '';
+  let m = u.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/i);
+  if (m) return `<iframe src="https://www.youtube-nocookie.com/embed/${m[1]}" loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen title="Video"></iframe>`;
+  m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (m) return `<iframe src="https://player.vimeo.com/video/${m[1]}" loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen title="Video"></iframe>`;
+  m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/i);
+  if (m) return `<iframe src="https://drive.google.com/file/d/${m[1]}/preview" loading="lazy" allow="fullscreen" allowfullscreen title="Video"></iframe>`;
+  if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(u)) return `<video src="${esc(u)}" controls preload="metadata"></video>`;
+  return '';
+}
+
+function tarjetaVideo(v) {
+  const player = reproductor(v.url);
+  return `
+    <article class="video">
+      ${player ? `<div class="video__marco">${player}</div>` : ''}
+      <div class="video__texto">
+        <h3>${esc(v.titulo)}</h3>
+        ${v.descripcion ? `<p>${esc(v.descripcion)}</p>` : ''}
+        ${player ? '' : `<a class="btn btn--borde btn--chico" href="${esc(urlSegura(v.url))}" target="_blank" rel="noopener">Ver video <span class="flecha">→</span></a>`}
+      </div>
+    </article>`;
+}
+
+async function pintarCapacitacion() {
+  const caja = $('listaCapacitacion');
+  let lista;
+  try {
+    lista = await api('/cuenta/capacitacion');
+  } catch {
+    caja.innerHTML = '<p class="texto">No se pudo cargar la capacitación. Inténtalo de nuevo en unos momentos.</p>';
+    return;
+  }
+  if (!lista.length) {
+    caja.innerHTML = vacio('Cuando adquieras un sistema, aquí verás los videos para aprender a usarlo.', true);
+    return;
+  }
+  const grupo = (titulo, videos) => videos.length
+    ? `<h3 class="capacitacion__grupo">${titulo}</h3><div class="videos">${videos.map(tarjetaVideo).join('')}</div>` : '';
+  caja.innerHTML = lista.map((s) => {
+    const admin = s.videos.filter((v) => v.para === 'admin');
+    const usuarios = s.videos.filter((v) => v.para !== 'admin');
+    return `
+      <section class="capacitacion">
+        <h2 class="subtitulo" style="margin-top:0">${esc(s.nombre)}</h2>
+        ${s.videos.length
+          ? grupo('Para el administrador', admin) + grupo('Para los usuarios', usuarios)
+          : '<p class="texto texto--chico">Pronto agregaremos los videos de capacitación de este sistema.</p>'}
+      </section>`;
+  }).join('');
+}
+
 async function cargar() {
   try {
     const [usuario, licencias, solicitudes, empresas] = await Promise.all([
@@ -404,6 +460,7 @@ async function cargar() {
   }
   mostrarPlanElegido();
   pintarCatalogo();
+  pintarCapacitacion();
 }
 
 // ---- Acciones ----

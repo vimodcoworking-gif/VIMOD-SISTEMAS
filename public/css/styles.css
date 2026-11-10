@@ -558,3 +558,14 @@ a { color: inherit; text-decoration: none; }
   .tabla td.tabla__vacia { display: block; }
   .tabla td.tabla__vacia::before { content: none; }
 }
+
+/* ---- Mi cuenta: capacitación (videos) ---- */
+.capacitacion { margin-bottom: 48px; }
+.capacitacion__grupo { font-size: .7rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gris); font-weight: 500; margin: 22px 0 14px; }
+.videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 20px; }
+.video { border: 1px solid var(--gris-oscuro); background: var(--carbon); display: flex; flex-direction: column; min-width: 0; }
+.video__marco { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.video__marco iframe, .video__marco video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video__texto { padding: 18px 20px 20px; display: grid; gap: 8px; justify-items: start; }
+.video__texto h3 { font-size: 1rem; font-weight: 600; }
+.video__texto p { color: var(--gris-claro); font-size: .86rem; }

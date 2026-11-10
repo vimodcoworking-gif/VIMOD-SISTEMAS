@@ -177,6 +177,26 @@ router.get('/cuenta/licencias', requiereSesion, a(async (req, res) => {
   );
 }));
 
+// Capacitación: videos de los softwares con licencia activa del cliente.
+router.get('/cuenta/capacitacion', requiereSesion, a(async (req, res) => {
+  const licencias = await Licencia.find({ usuario: req.usuario._id }).populate('sistema', 'nombre capacitacion orden');
+  const vistos = new Set();
+  const lista = [];
+  licencias
+    .filter((l) => l.sistema && l.estadoReal === 'activa')
+    .sort((x, y) => (x.sistema.orden || 0) - (y.sistema.orden || 0))
+    .forEach((l) => {
+      if (vistos.has(l.sistema.id)) return;
+      vistos.add(l.sistema.id);
+      lista.push({
+        id: l.sistema.id,
+        nombre: l.sistema.nombre,
+        videos: (l.sistema.capacitacion || []).map((v) => ({ titulo: v.titulo, url: v.url, para: v.para, descripcion: v.descripcion || '' }))
+      });
+    });
+  res.json(lista);
+}));
+
 router.get('/cuenta/solicitudes', requiereSesion, a(async (req, res) => {
   const lista = await Solicitud.find({ email: req.usuario.email }).populate('sistema', 'nombre planes').sort('-createdAt').limit(50);
   res.json(lista.map((s) => ({
@@ -209,7 +229,8 @@ router.post('/cuenta/solicitudes', requiereSesion, auth.limitador(20, 60 * 60e3)
 
 // ---- Sistema propio de la empresa (VIMOD CONTROL en el servidor) ----
 router.get('/cuenta/empresas', requiereSesion, a(async (req, res) => {
-  const lista = await Empresa.find({ usuario: req.usuario._id }).select('+adminClave').sort('-createdAt').lean();
+  // Las que se están eliminando del servidor ya no se muestran.
+  const lista = await Empresa.find({ usuario: req.usuario._id, estado: { $ne: 'eliminando' } }).select('+adminClave').sort('-createdAt').lean();
   res.json(lista.map((e) => ({
     id: String(e._id),
     nombre: e.nombre,
@@ -226,7 +247,7 @@ router.get('/cuenta/empresas', requiereSesion, a(async (req, res) => {
 
 router.get('/cuenta/empresas/:id/clave', requiereSesion, a(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'No encontrado' });
-  const e = await Empresa.findOne({ _id: req.params.id, usuario: req.usuario._id }).select('+adminClave');
+  const e = await Empresa.findOne({ _id: req.params.id, usuario: req.usuario._id, estado: { $ne: 'eliminando' } }).select('+adminClave');
   if (!e || !e.adminClave) return res.status(404).json({ error: 'La contraseña ya no está disponible. Pídela a VIMOD.' });
   const clave = cifrado.descifrar(e.adminClave);
   if (!clave) return res.status(503).json({ error: 'No se pudo mostrar la contraseña. Pídela a VIMOD.' });
